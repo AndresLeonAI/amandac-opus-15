@@ -1,7 +1,12 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, User, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, ChevronRight, Calculator, CheckSquare, HelpCircle, TrendingUp, Shield, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Checkbox } from '@/components/ui/checkbox';
 import { BlogTOC } from '@/components/BlogTOC';
 import { ReadingProgress } from '@/components/ReadingProgress';
 import { slugify } from '@/utils/slugify';
@@ -10,6 +15,12 @@ import Footer from '@/components/Footer';
 import emergencyFundImage from '@/assets/blog-emergency-fund.jpg';
 import inflationImage from '@/assets/blog-inflation.jpg';
 import entrepreneursImage from '@/assets/blog-entrepreneurs.jpg';
+
+// Import blog components
+import { EmergencyFundCalculator } from '@/components/blog/EmergencyFundCalculator';
+import { EmergencyFundChecklist } from '@/components/blog/EmergencyFundChecklist';
+import { BlogFAQ } from '@/components/blog/BlogFAQ';
+import { BlogCTA } from '@/components/blog/BlogCTA';
 
 const blogPosts = [
   {
@@ -534,6 +545,91 @@ const BlogPost = () => {
               </p>
               
               <div dangerouslySetInnerHTML={{ __html: post.content }} />
+              
+              {/* Interactive Components for Emergency Fund Article */}
+              {post.slug === 'fondo-de-emergencia-en-colombia' && (
+                <>
+                  <EmergencyFundCalculator />
+                  <EmergencyFundChecklist />
+                  <BlogFAQ 
+                    items={[
+                      {
+                        question: "¿Puedo \"invertir\" el fondo?",
+                        answer: "Sí, en instrumentos de alta liquidez y bajo riesgo. Prioriza acceso rápido."
+                      },
+                      {
+                        question: "¿Puede estar en dólares o cripto?",
+                        answer: "No es ideal por volatilidad y tiempos de conversión."
+                      },
+                      {
+                        question: "¿Qué pasa si lo uso parcialmente?",
+                        answer: "Define un plan de reposición con aportes adicionales durante 2–3 meses."
+                      }
+                    ]}
+                  />
+                  <BlogCTA 
+                    title="¿Quieres un plan personalizado?"
+                    description="Agenda una asesoría y diseñamos tu fondo con hoja de ruta y reglas de gobierno específicas para tu situación."
+                    buttonText="Agendar consulta privada"
+                    whatsappMessage="Hola Amanda, me interesa diseñar un fondo de emergencia personalizado con plan y reglas específicas."
+                  />
+                </>
+              )}
+              
+              {/* FAQ for other articles */}
+              {post.slug === 'inflacion-y-banco-de-la-republica' && (
+                <>
+                  <BlogFAQ 
+                    items={[
+                      {
+                        question: "¿Cambio mi hipoteca UVR a fija?",
+                        answer: "Depende de flujo, horizonte y costos de cambio. Requiere simulación personalizada."
+                      },
+                      {
+                        question: "¿Conviene un CDT largo?",
+                        answer: "Si anticipas bajas de tasas, prefiere escalonar (varios plazos) y conservar liquidez."
+                      },
+                      {
+                        question: "¿Cómo sé si pierdo contra la inflación?",
+                        answer: "Compara tu rentabilidad neta anual con el IPC anual y ajusta tu estrategia."
+                      }
+                    ]}
+                  />
+                  <BlogCTA 
+                    title="¿Necesitas un diagnóstico integral?"
+                    description="Diseñamos un plan táctico por etapas ajustado al ciclo económico actual."
+                    buttonText="Solicitar diagnóstico"
+                    whatsappMessage="Hola Amanda, me interesa un diagnóstico integral de deudas, cuotas y ahorro bajo el ciclo actual."
+                  />
+                </>
+              )}
+              
+              {post.slug === 'independientes-y-emprendedores-en-bogota' && (
+                <>
+                  <BlogFAQ 
+                    items={[
+                      {
+                        question: "¿Cuánto reservo para impuestos?",
+                        answer: "Define un porcentaje objetivo con tu contador y ajústalo conforme a tu facturación."
+                      },
+                      {
+                        question: "¿Cómo estabilizo ingresos?",
+                        answer: "Crea planes de mantenimiento o membresías que generen pagos recurrentes."
+                      },
+                      {
+                        question: "¿Qué hago si un cliente retrasa pagos?",
+                        answer: "Aplica lo pactado en contrato, activa recordatorios y evita depender de un solo cliente."
+                      }
+                    ]}
+                  />
+                  <BlogCTA 
+                    title="¿Quieres implementar el sistema completo?"
+                    description="Agenda una sesión y lo dejamos implementado desde la primera semana con plantillas y porcentajes ajustados."
+                    buttonText="Implementar sistema"
+                    whatsappMessage="Hola Amanda, me interesa implementar el sistema de 5 sobres con plantillas y plan personalizado."
+                  />
+                </>
+              )}
             </div>
             
             {/* Back to Blog */}

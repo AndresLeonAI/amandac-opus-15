@@ -35,13 +35,57 @@ const Services = () => {
           </p>
         </div>
 
-        {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {/* Desktop: Vertical Scroll-Snap Layout */}
+        <div className="hidden lg:block">
+          <div className="w-full max-w-4xl mx-auto" style={{ scrollSnapType: 'y mandatory' }}>
+            {services.map((service, index) => {
+              const Icon = service.icon;
+              return (
+                <div 
+                  key={index} 
+                  className="min-h-screen flex items-center justify-center py-16 fade-in" 
+                  style={{ 
+                    animationDelay: `${index * 0.1}s`,
+                    scrollSnapAlign: 'start'
+                  }}
+                >
+                  <div className="w-full max-w-2xl mx-auto">
+                    <GlareCard className="p-12 group cursor-pointer glass-card">
+                      {/* Icon */}
+                      <div className="mb-8 text-center">
+                        <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center mx-auto transition-all duration-500 group-hover:bg-primary/20 group-hover:scale-110 pulse-glow">
+                          <Icon className="w-8 h-8 text-primary group-hover:text-primary-glow transition-colors duration-300" />
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="text-center">
+                        <h3 className="font-luxury text-3xl text-primary mb-3 font-medium group-hover:text-primary-glow transition-colors duration-300">
+                          {service.title}
+                        </h3>
+                        <p className="font-elegant text-primary/80 text-lg mb-6 group-hover:text-primary transition-colors duration-300">
+                          {service.subtitle}
+                        </p>
+                        <p className="font-elegant text-muted-foreground text-base leading-relaxed group-hover:text-foreground/80 transition-colors duration-300 max-w-xl mx-auto">
+                          {service.description}
+                        </p>
+                      </div>
+                    </GlareCard>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Mobile/Tablet: Original Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:hidden">
           {services.map((service, index) => {
-          const Icon = service.icon;
-          return <div key={index} className="fade-in" style={{
-            animationDelay: `${index * 0.1}s`
-          }}>
+            const Icon = service.icon;
+            return (
+              <div key={index} className="fade-in" style={{
+                animationDelay: `${index * 0.1}s`
+              }}>
                 <GlareCard className="p-8 h-full group cursor-pointer glass-card">
                   {/* Icon */}
                   <div className="mb-6">
@@ -61,8 +105,9 @@ const Services = () => {
                     {service.description}
                   </p>
                 </GlareCard>
-              </div>;
-        })}
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>;

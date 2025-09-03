@@ -11,6 +11,7 @@ import Testimonials from '@/components/Testimonials';
 import FAQ from '@/components/FAQ';
 import ContactForm from '@/components/ContactForm';
 import CTASection from '@/components/CTASection';
+import GlobalFinancesCard from '@/components/GlobalFinancesCard';
 import Footer from '@/components/Footer';
 const Index = () => {
   useEffect(() => {
@@ -65,6 +66,7 @@ const Index = () => {
           </section>
           <KPIs />
           <Process />
+          <GlobalFinancesCard />
           <Testimonials />
           <FAQ />
           <ContactForm />

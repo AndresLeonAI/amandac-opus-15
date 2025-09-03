@@ -110,7 +110,7 @@ const ContactForm = () => {
                   </div>
                   <div>
                     <p className="font-elegant text-foreground/90 font-medium">Email privado</p>
-                    <p className="font-elegant text-muted-foreground">consultas@amandacruz.com</p>
+                    <p className="font-elegant text-muted-foreground">amanda.cruz@axia.com.co</p>
                   </div>
                 </div>
 
@@ -120,7 +120,7 @@ const ContactForm = () => {
                   </div>
                   <div>
                     <p className="font-elegant text-foreground/90 font-medium">Oficinas</p>
-                    <p className="font-elegant text-muted-foreground">Bogotá · Miami · Nueva York</p>
+                    <p className="font-elegant text-muted-foreground">Bogota</p>
                   </div>
                 </div>
               </div>
