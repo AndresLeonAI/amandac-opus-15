@@ -194,7 +194,23 @@ const renderArticleContent = (post: typeof blogPosts[0]) => {
         </section>
 
         {/* FAQ Component */}
-        <BlogFAQ title="Preguntas frecuentes sobre fondos de emergencia" />
+        <BlogFAQ 
+          title="Preguntas frecuentes sobre fondos de emergencia"
+          items={[
+            {
+              question: "¿Cuánto dinero debo tener en mi fondo de emergencia?",
+              answer: "Se recomienda tener entre 3 a 6 meses de gastos básicos. Si tu trabajo es inestable o eres freelancer, considera 6 a 12 meses."
+            },
+            {
+              question: "¿Dónde debo guardar mi fondo de emergencia?",
+              answer: "En una cuenta de ahorros de alta liquidez, cuenta del mercado monetario o depósito a plazo corto. Debe ser fácilmente accesible pero separado de tu cuenta corriente."
+            },
+            {
+              question: "¿Puedo invertir mi fondo de emergencia?",
+              answer: "No es recomendable. El fondo de emergencia debe estar en instrumentos líquidos y de bajo riesgo, aunque esto signifique menor rentabilidad."
+            }
+          ]}
+        />
 
         {/* CTA Component */}
         <BlogCTA 
@@ -264,7 +280,23 @@ const renderArticleContent = (post: typeof blogPosts[0]) => {
           </p>
         </section>
 
-        <BlogFAQ title="Preguntas frecuentes sobre inflación" />
+        <BlogFAQ 
+          title="Preguntas frecuentes sobre inflación"
+          items={[
+            {
+              question: "¿Cómo puedo protegerme de la inflación?",
+              answer: "Diversifica en activos reales como bienes raíces, acciones e inversiones indexadas a inflación. Evita mantener todo en efectivo."
+            },
+            {
+              question: "¿Cuándo ajustar mi presupuesto por inflación?",
+              answer: "Revisa y ajusta trimestralmente. Si la inflación supera 5% anual, considera aumentos en categorías esenciales como alimentación y transporte."
+            },
+            {
+              question: "¿Debo endeudarte cuando hay inflación alta?",
+              answer: "Depende del tipo de deuda. Las deudas a tasa fija pueden ser ventajosas con inflación alta, pero las tasas variables pueden volverse costosas."
+            }
+          ]}
+        />
 
         <BlogCTA 
           title="¿Necesitas un diagnóstico integral?"
@@ -320,7 +352,23 @@ const renderArticleContent = (post: typeof blogPosts[0]) => {
           </div>
         </section>
 
-        <BlogFAQ title="Preguntas frecuentes para independientes" />
+        <BlogFAQ 
+          title="Preguntas frecuentes para independientes"
+          items={[
+            {
+              question: "¿Cómo separo mis gastos personales de los del negocio?",
+              answer: "Usa cuentas bancarias diferentes y registra cada movimiento desde el día 1. Es obligatorio legalmente y te permite entender la rentabilidad real de tu actividad."
+            },
+            {
+              question: "¿Cuánto debo ahorrar para impuestos?",
+              answer: "Como regla general, reserva 15-20% de cada ingreso para impuestos y obligaciones. Si eres régimen simplificado, puede ser menos, pero siempre consulta con un contador."
+            },
+            {
+              question: "¿Es mejor trabajar como independiente o crear empresa?",
+              answer: "Depende de tus ingresos y gastos. Generalmente, si generas más de $50M anuales, constituir empresa puede ser más eficiente fiscalmente."
+            }
+          ]}
+        />
 
         <BlogCTA 
           title="¿Quieres una plantilla personalizada?"
