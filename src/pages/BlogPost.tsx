@@ -85,27 +85,6 @@ const blogPosts = [
         <li>Tomar "préstamos" del fondo sin reponerlos.</li>
         <li>No actualizar la meta tras cambios de vida (mudanza, hijos, nuevas deudas).</li>
       </ul>
-
-      <h3>Mini calculadora</h3>
-      <p>Meta de fondo = Gastos esenciales mensuales × Meses objetivo.</p>
-      <p>Divide tu meta en hitos: 30% (básico), 60% (intermedio), 100% (ideal).</p>
-
-      <h3>Checklist</h3>
-      <ul>
-        <li>☐ Cifra de gastos esenciales clara.</li>
-        <li>☐ Meta de meses definida.</li>
-        <li>☐ Contenedor exclusivo creado.</li>
-        <li>☐ Aportes automáticos activos.</li>
-        <li>☐ Próxima revisión agendada (90 días).</li>
-      </ul>
-
-      <h2>Llamado a la acción</h2>
-      <p>¿Quieres un plan con montos y productos ajustados a tu perfil? Agenda una asesoría y diseñamos tu fondo con hoja de ruta y reglas de gobierno.</p>
-
-      <h3>FAQ</h3>
-      <p><strong>¿Puedo "invertir" el fondo?</strong> Sí, en instrumentos de alta liquidez y bajo riesgo. Prioriza acceso rápido.</p>
-      <p><strong>¿Puede estar en dólares o cripto?</strong> No es ideal por volatilidad y tiempos de conversión.</p>
-      <p><strong>¿Qué pasa si lo uso parcialmente?</strong> Define un plan de reposición con aportes adicionales durante 2–3 meses.</p>
     `
   },
   {
@@ -197,14 +176,6 @@ const blogPosts = [
         <li>"Perseguir la tasa" descuidando la liquidez necesaria.</li>
         <li>Ignorar comisiones/costos que reducen la rentabilidad neta.</li>
       </ul>
-
-      <h3>FAQ</h3>
-      <p><strong>¿Cambio mi hipoteca UVR a fija?</strong> Depende de flujo, horizonte y costos de cambio. Requiere simulación personalizada.</p>
-      <p><strong>¿Conviene un CDT largo?</strong> Si anticipas bajas de tasas, prefiere escalonar (varios plazos) y conservar liquidez.</p>
-      <p><strong>¿Cómo sé si pierdo contra la inflación?</strong> Compara tu rentabilidad neta anual con el IPC anual y ajusta tu estrategia.</p>
-
-      <h2>Llamado a la acción</h2>
-      <p>¿Quieres un diagnóstico integral de deudas, cuotas y ahorro bajo el ciclo actual? Escríbeme y diseñamos un plan táctico por etapas.</p>
     `
   },
   {
@@ -296,14 +267,6 @@ const blogPosts = [
         <li>Mezclar finanzas del negocio y personales.</li>
         <li>Postergar protección y ahorro de largo plazo.</li>
       </ul>
-
-      <h2>Llamado a la acción</h2>
-      <p>¿Quieres una plantilla de flujo y un plan de sobres con porcentajes ajustados a tu realidad? Agenda una sesión y lo dejamos implementado desde la primera semana.</p>
-
-      <h3>FAQ</h3>
-      <p><strong>¿Cuánto reservo para impuestos?</strong> Define un porcentaje objetivo con tu contador y ajústalo conforme a tu facturación.</p>
-      <p><strong>¿Cómo estabilizo ingresos?</strong> Crea planes de mantenimiento o membresías que generen pagos recurrentes.</p>
-      <p><strong>¿Qué hago si un cliente retrasa pagos?</strong> Aplica lo pactado en contrato, activa recordatorios y evita depender de un solo cliente.</p>
     `
   }
 ];
@@ -497,7 +460,7 @@ const BlogPost = () => {
           <div className="hidden lg:block" />
           
           {/* Main content */}
-          <article className="led-card rounded-2xl p-6 lg:p-8 max-w-4xl mx-auto">
+          <article className="max-w-4xl mx-auto space-y-12">
             {/* Hero Image */}
             <div className="aspect-[16/9] rounded-xl overflow-hidden mb-8">
               <picture>
@@ -538,9 +501,9 @@ const BlogPost = () => {
             {/* Article Body */}
             <div 
               ref={contentRef}
-              className="prose prose-invert prose-lg max-w-none blog-content leading-relaxed"
+              className="prose prose-lg max-w-none prose-headings:font-luxury prose-headings:text-foreground prose-p:font-elegant prose-p:text-muted-foreground prose-li:font-elegant prose-li:text-muted-foreground prose-strong:text-foreground prose-h2:text-3xl prose-h2:mb-8 prose-h3:text-2xl prose-h3:mb-6 prose-p:mb-6 prose-p:leading-relaxed prose-ul:mb-6 prose-ol:mb-6 prose-ul:list-disc prose-ol:list-decimal prose-li:mb-2"
             >
-              <p className="lead font-elegant text-lg text-muted-foreground leading-relaxed mb-8">
+              <p className="lead font-elegant text-xl text-muted-foreground leading-relaxed mb-12 border-l-4 border-primary pl-6 py-4 bg-primary/5 rounded-r-lg">
                 {post.excerpt}
               </p>
               
