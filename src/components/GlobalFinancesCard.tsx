@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
+import { TiltCard } from '@/components/TiltCard';
 import createGlobe from 'cobe';
 
 const GlobalFinancesCard = () => {
@@ -69,7 +70,7 @@ const GlobalFinancesCard = () => {
     <section className="py-16 relative">
       <div className="container mx-auto px-6">
         <div className="max-w-md w-full mx-auto">
-          <div className="glass-card rounded-2xl overflow-hidden shadow-elegant border border-white/20 backdrop-blur-xl">
+          <TiltCard className="rounded-2xl overflow-hidden shadow-elegant border border-white/20 backdrop-blur-xl" intensity={12}>
             {/* Globe Canvas Section */}
             <div className="relative h-64">
               <canvas
@@ -149,7 +150,7 @@ const GlobalFinancesCard = () => {
                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
               </Button>
             </div>
-          </div>
+          </TiltCard>
         </div>
       </div>
     </section>

@@ -1,5 +1,6 @@
 import { TrendingUp, Shield, Target, Gem } from 'lucide-react';
 import { GlareCard } from '@/components/ui/glare-card';
+import { useTiltEffect } from '@/hooks/use-tilt-effect';
 const services = [{
   icon: TrendingUp,
   title: 'Gestión de Carteras',
@@ -50,27 +51,66 @@ const Services = () => {
                   }}
                 >
                   <div className="w-full max-w-2xl mx-auto">
-                    <GlareCard className="p-12 group cursor-pointer glass-card">
-                      {/* Icon */}
-                      <div className="mb-8 text-center">
-                        <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center mx-auto transition-all duration-500 group-hover:bg-primary/20 group-hover:scale-110 pulse-glow">
-                          <Icon className="w-8 h-8 text-primary group-hover:text-primary-glow transition-colors duration-300" />
-                        </div>
+                    <div 
+                      ref={useTiltEffect(15) as React.RefObject<HTMLDivElement>}
+                      className="p-12 group cursor-pointer glass-card rounded-xl border border-border/20 bg-card/30 backdrop-blur-sm transition-all duration-500 hover:shadow-glow hover:-translate-y-1 transform-gpu will-change-transform relative overflow-hidden"
+                      style={{
+                        '--mouse-x': '50%',
+                        '--mouse-y': '50%',
+                      } as React.CSSProperties}
+                    >
+                      {/* Glare effects */}
+                      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                        <div
+                          className="absolute inset-0 rounded-xl"
+                          style={{
+                            background: `
+                              radial-gradient(
+                                600px circle at var(--mouse-x) var(--mouse-y),
+                                hsla(var(--primary), 0.15),
+                                transparent 40%
+                              )
+                            `,
+                          }}
+                        />
+                      </div>
+                      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-30">
+                        <div
+                          className="absolute inset-0 rounded-xl"
+                          style={{
+                            background: `
+                              radial-gradient(
+                                300px circle at var(--mouse-x) var(--mouse-y),
+                                rgba(255, 255, 255, 0.1),
+                                transparent 40%
+                              )
+                            `,
+                          }}
+                        />
                       </div>
 
-                      {/* Content */}
-                      <div className="text-center">
-                        <h3 className="font-luxury text-3xl text-primary mb-3 font-medium group-hover:text-primary-glow transition-colors duration-300">
-                          {service.title}
-                        </h3>
-                        <p className="font-elegant text-primary/80 text-lg mb-6 group-hover:text-primary transition-colors duration-300">
-                          {service.subtitle}
-                        </p>
-                        <p className="font-elegant text-muted-foreground text-base leading-relaxed group-hover:text-foreground/80 transition-colors duration-300 max-w-xl mx-auto">
-                          {service.description}
-                        </p>
+                      <div className="relative z-10">
+                        {/* Icon */}
+                        <div className="mb-8 text-center">
+                          <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center mx-auto transition-all duration-500 group-hover:bg-primary/20 group-hover:scale-110 pulse-glow">
+                            <Icon className="w-8 h-8 text-primary group-hover:text-primary-glow transition-colors duration-300" />
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="text-center">
+                          <h3 className="font-luxury text-3xl text-primary mb-3 font-medium group-hover:text-primary-glow transition-colors duration-300">
+                            {service.title}
+                          </h3>
+                          <p className="font-elegant text-primary/80 text-lg mb-6 group-hover:text-primary transition-colors duration-300">
+                            {service.subtitle}
+                          </p>
+                          <p className="font-elegant text-muted-foreground text-base leading-relaxed group-hover:text-foreground/80 transition-colors duration-300 max-w-xl mx-auto">
+                            {service.description}
+                          </p>
+                        </div>
                       </div>
-                    </GlareCard>
+                    </div>
                   </div>
                 </div>
               );
@@ -86,25 +126,64 @@ const Services = () => {
               <div key={index} className="fade-in" style={{
                 animationDelay: `${index * 0.1}s`
               }}>
-                <GlareCard className="p-8 h-full group cursor-pointer glass-card">
-                  {/* Icon */}
-                  <div className="mb-6">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center transition-all duration-500 group-hover:bg-primary/20 group-hover:scale-110 pulse-glow">
-                      <Icon className="w-6 h-6 text-primary group-hover:text-primary-glow transition-colors duration-300" />
-                    </div>
+                <div 
+                  ref={useTiltEffect(12) as React.RefObject<HTMLDivElement>}
+                  className="p-8 h-full group cursor-pointer glass-card rounded-xl border border-border/20 bg-card/30 backdrop-blur-sm transition-all duration-500 hover:shadow-glow hover:-translate-y-1 transform-gpu will-change-transform relative overflow-hidden"
+                  style={{
+                    '--mouse-x': '50%',
+                    '--mouse-y': '50%',
+                  } as React.CSSProperties}
+                >
+                  {/* Glare effects */}
+                  <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <div
+                      className="absolute inset-0 rounded-xl"
+                      style={{
+                        background: `
+                          radial-gradient(
+                            600px circle at var(--mouse-x) var(--mouse-y),
+                            hsla(var(--primary), 0.15),
+                            transparent 40%
+                          )
+                        `,
+                      }}
+                    />
+                  </div>
+                  <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-30">
+                    <div
+                      className="absolute inset-0 rounded-xl"
+                      style={{
+                        background: `
+                          radial-gradient(
+                            300px circle at var(--mouse-x) var(--mouse-y),
+                            rgba(255, 255, 255, 0.1),
+                            transparent 40%
+                          )
+                        `,
+                      }}
+                    />
                   </div>
 
-                  {/* Content */}
-                  <h3 className="font-elegant text-xl text-primary mb-2 font-medium group-hover:text-primary-glow transition-colors duration-300">
-                    {service.title}
-                  </h3>
-                  <p className="font-luxury text-primary/80 text-sm mb-4 group-hover:text-primary transition-colors duration-300">
-                    {service.subtitle}
-                  </p>
-                  <p className="font-elegant text-muted-foreground text-sm leading-relaxed group-hover:text-foreground/80 transition-colors duration-300">
-                    {service.description}
-                  </p>
-                </GlareCard>
+                  <div className="relative z-10">
+                    {/* Icon */}
+                    <div className="mb-6">
+                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center transition-all duration-500 group-hover:bg-primary/20 group-hover:scale-110 pulse-glow">
+                        <Icon className="w-6 h-6 text-primary group-hover:text-primary-glow transition-colors duration-300" />
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <h3 className="font-elegant text-xl text-primary mb-2 font-medium group-hover:text-primary-glow transition-colors duration-300">
+                      {service.title}
+                    </h3>
+                    <p className="font-luxury text-primary/80 text-sm mb-4 group-hover:text-primary transition-colors duration-300">
+                      {service.subtitle}
+                    </p>
+                    <p className="font-elegant text-muted-foreground text-sm leading-relaxed group-hover:text-foreground/80 transition-colors duration-300">
+                      {service.description}
+                    </p>
+                  </div>
+                </div>
               </div>
             );
           })}

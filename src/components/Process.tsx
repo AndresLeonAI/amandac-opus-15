@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, Target, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { GlareCard } from '@/components/ui/glare-card';
+import { TiltCard } from '@/components/TiltCard';
 
 const steps = [
   {
@@ -135,7 +135,7 @@ const Process = () => {
                   {/* Process Cards */}
                   <div className={`space-y-6 ${isEven ? '' : 'lg:col-start-1'}`}>
                     {/* User Actions Card */}
-                    <GlareCard className="p-6">
+                    <TiltCard className="p-6" intensity={10}>
                       <h4 className="font-elegant text-lg text-primary mb-4 font-medium">LO QUE USTED HACE</h4>
                       <ul className="space-y-2">
                         {step.userActions.map((action, actionIndex) => (
@@ -145,10 +145,10 @@ const Process = () => {
                           </li>
                         ))}
                       </ul>
-                    </GlareCard>
+                    </TiltCard>
 
                     {/* Our Actions Card */}
-                    <GlareCard className="p-6">
+                    <TiltCard className="p-6" intensity={10}>
                       <h4 className="font-elegant text-lg text-primary mb-4 font-medium">LO QUE NOSOTROS HACEMOS</h4>
                       <ul className="space-y-2">
                         {step.ourActions.map((action, actionIndex) => (
@@ -158,7 +158,7 @@ const Process = () => {
                           </li>
                         ))}
                       </ul>
-                    </GlareCard>
+                    </TiltCard>
                   </div>
                 </div>
               </motion.div>
