@@ -3,33 +3,40 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import Index from "./pages/Index";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import Awards from "./pages/Awards";
+import AwardDetail from "./pages/AwardDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-  <HashRouter>
-    <Routes>
-      <Route path="/" element={<Index />} />
+    <HelmetProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<Index />} />
 
-      {/* Listado */}
-      <Route path="/blog" element={<Blog />} />
+        {/* Blog routes */}
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
 
-      {/* Detalle principal con parámetro slug */}
-      <Route path="/blog/:slug" element={<BlogPost />} />
+        {/* Awards routes */}
+        <Route path="/premios" element={<Awards />} />
+        <Route path="/premios/:slug" element={<AwardDetail />} />
 
-      {/* Catch-all → a la home */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  </HashRouter>
-    </TooltipProvider>
+        {/* Catch-all → home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </HashRouter>
+      </TooltipProvider>
+    </HelmetProvider>
   </QueryClientProvider>
 );
 

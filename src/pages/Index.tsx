@@ -7,6 +7,7 @@ import Services from '@/components/Services';
 import TrustBanner from '@/components/TrustBanner';
 import KPIs from '@/components/KPIs';
 import Process from '@/components/Process';
+import Awards from '@/components/Awards';
 import Testimonials from '@/components/Testimonials';
 import FAQ from '@/components/FAQ';
 import ContactForm from '@/components/ContactForm';
@@ -66,6 +67,7 @@ const Index = () => {
           </section>
           <KPIs />
           <Process />
+          <Awards />
           <GlobalFinancesCard />
           <Testimonials />
           <FAQ />

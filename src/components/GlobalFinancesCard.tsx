@@ -67,7 +67,7 @@ const GlobalFinancesCard = () => {
   };
 
   return (
-    <section className="py-16 relative">
+    <section id="finanzas-divisa" className="py-16 relative">
       <div className="container mx-auto px-6">
         <div className="max-w-md w-full mx-auto">
           <TiltCard className="rounded-2xl overflow-hidden shadow-elegant border border-white/20 backdrop-blur-xl" intensity={12}>

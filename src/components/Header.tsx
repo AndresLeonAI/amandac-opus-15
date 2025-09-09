@@ -39,9 +39,12 @@ const Header = () => {
             <a href="/#asesoria-estrategia" className="font-luxury text-white/90 hover:text-white animated-underline transition-colors">
               Servicios
             </a>
-            <a href="/#proceso" className="font-luxury text-white/90 hover:text-white animated-underline transition-colors">
+            <a href="/#proceso-meticuloso" className="font-luxury text-white/90 hover:text-white animated-underline transition-colors">
               Proceso
             </a>
+            <Link to="/premios" className="font-luxury text-white/90 hover:text-white animated-underline transition-colors">
+              Premios
+            </Link>
             <Link to="/blog" className="font-luxury text-white/90 hover:text-white animated-underline transition-colors">
               Blog
             </Link>

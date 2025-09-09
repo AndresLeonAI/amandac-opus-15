@@ -83,7 +83,7 @@ const Process = () => {
   }, []);
 
   return (
-    <section ref={processRef} id="proceso" className="py-24 bg-background">
+    <section ref={processRef} id="proceso-meticuloso" className="py-24 bg-background">
       <div className="container mx-auto px-6">
         {/* Section Header */}
         <motion.div 
