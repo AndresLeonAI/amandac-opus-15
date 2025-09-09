@@ -15,6 +15,7 @@ import { EmergencyFundCalculator } from '@/components/blog/EmergencyFundCalculat
 import { EmergencyFundChecklist } from '@/components/blog/EmergencyFundChecklist';
 import { BlogFAQ } from '@/components/blog/BlogFAQ';
 import { BlogCTA } from '@/components/blog/BlogCTA';
+import { ScrollReveal, FadeInUp, FadeInScale, StaggerContainer } from '@/components/ui/scroll-reveal';
 
 const blogPosts = [
   {
@@ -100,7 +101,9 @@ const renderArticleContent = (post: typeof blogPosts[0]) => {
         </section>
 
         {/* Calculator Component */}
-        <EmergencyFundCalculator />
+        <FadeInScale delay={0.2}>
+          <EmergencyFundCalculator />
+        </FadeInScale>
 
         <section className="space-y-8 reveal-up">
           <h2 className="font-luxury text-4xl text-foreground mb-6">¿Dónde ubicarlo? En capas (liquidez superior a rendimiento)</h2>
@@ -175,7 +178,9 @@ const renderArticleContent = (post: typeof blogPosts[0]) => {
         </section>
 
         {/* Checklist Component */}
-        <EmergencyFundChecklist />
+        <FadeInScale delay={0.4}>
+          <EmergencyFundChecklist />
+        </FadeInScale>
 
         <section className="space-y-8 reveal-up">
           <h3 className="font-luxury text-3xl text-destructive mb-6 italic">Errores frecuentes</h3>
