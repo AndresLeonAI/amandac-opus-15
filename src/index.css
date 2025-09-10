@@ -125,9 +125,8 @@
     @apply border-border;
   }
 
-body {
-  background-color: #1a3e6d;
-}
+  body {
+    background-color: #1a3e6d;
     @apply text-foreground overflow-x-hidden;
     background: var(--bg-page) !important;
     background-attachment: fixed;
@@ -559,3 +558,4 @@ body {
       transition: none !important;
     }
   }
+}
