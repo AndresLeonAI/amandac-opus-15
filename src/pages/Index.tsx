@@ -14,6 +14,7 @@ import ContactForm from '@/components/ContactForm';
 import CTASection from '@/components/CTASection';
 import GlobalFinancesCard from '@/components/GlobalFinancesCard';
 import Footer from '@/components/Footer';
+import WebGLShaderOceanLight from '@/components/ui/WebGLShaderOceanLight';
 const Index = () => {
   useEffect(() => {
     // Initialize scroll animations
@@ -52,6 +53,8 @@ const Index = () => {
     };
   }, []);
   return <div className="cursor-glow overflow-x-hidden relative">
+      {/* WebGL Ocean Background - Fixed behind content, not in hero */}
+      <WebGLShaderOceanLight className="pointer-events-none fixed inset-0 -z-10" />
       
       <div className="relative z-10">
         <Header />

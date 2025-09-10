@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { awards } from "@/data/awards";
 import { TiltCard } from "@/components/TiltCard";
 import { Helmet } from "react-helmet-async";
+import WebGLShaderOceanLight from "@/components/ui/WebGLShaderOceanLight";
 
 // Order: most recent to oldest / most representative first
 const orderedAwards = [
@@ -41,7 +42,10 @@ const Awards = () => {
         </script>
       </Helmet>
 
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen">
+        {/* WebGL Ocean Background - Fixed behind content, not in hero */}
+        <WebGLShaderOceanLight className="pointer-events-none fixed inset-0 -z-10" />
+        
         <Header />
         
         <main className="pt-24">

@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Send, Phone, Mail, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
+import { GlassCombobox } from '@/components/ui/glass-combobox';
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
@@ -190,22 +191,25 @@ const ContactForm = () => {
                 </div>
                 
                 <div>
-                  <label className="block font-elegant text-sm text-muted-foreground mb-2">
-                    Patrimonio aproximado
-                  </label>
-                  <select
-                    name="patrimony"
+                  <GlassCombobox
+                    label="Patrimonio aproximado (COP)"
+                    placeholder="Seleccionar rango"
+                    helpText="Nos ayuda a recomendar el plan correcto. Puedes no responder."
+                    tooltip="Patrimonio = activos totales menos deudas. Si prefieres, indícanos solo lo invertible."
+                    footerText="¿Manejas parte en USD? Calculamos al TRM del día automáticamente."
                     value={formData.patrimony}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 bg-card/20 border border-border/20 rounded-md focus:border-primary/50 focus:outline-none text-foreground font-elegant"
-                  >
-                    <option value="">Seleccionar rango</option>
-                    <option value="$500K - $1M USD">$500K - $1M USD</option>
-                    <option value="$1M - $5M USD">$1M - $5M USD</option>
-                    <option value="$5M - $10M USD">$5M - $10M USD</option>
-                    <option value="$10M+ USD">$10M+ USD</option>
-                    <option value="Prefiero no especificar">Prefiero no especificar</option>
-                  </select>
+                    onChange={(value) => setFormData({ ...formData, patrimony: value })}
+                    options={[
+                      { value: "$50-150M", label: "$50–$150 millones" },
+                      { value: "$150-300M", label: "$150–$300 millones" },
+                      { value: "$300-700M", label: "$300–$700 millones" },
+                      { value: "$700M-1.5B", label: "$700 millones – $1.5 mil millones" },
+                      { value: "$1.5-3B", label: "$1.5 – $3 mil millones" },
+                      { value: "$3-5B", label: "$3 – $5 mil millones" },
+                      { value: "$5B+", label: "Más de $5 mil millones" },
+                      { value: "no-specify", label: "Prefiero no especificar" }
+                    ]}
+                  />
                 </div>
               </div>
 

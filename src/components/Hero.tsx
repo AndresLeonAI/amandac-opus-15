@@ -27,8 +27,9 @@ const Hero = () => {
 
   return (
     <section 
+      id="hero"
       ref={heroRef} 
-      className="relative min-h-screen flex items-center justify-center overflow-hidden" 
+      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background" 
       style={{
         background: 'var(--bg-page, linear-gradient(135deg, hsl(220 45% 15%) 0%, hsl(225 50% 18%) 50%, hsl(230 55% 22%) 100%))'
       }}

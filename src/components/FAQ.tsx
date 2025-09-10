@@ -6,23 +6,23 @@ import { GlareCard } from '@/components/ui/glare-card';
 const faqs = [
   {
     question: "¿Cuál es el monto mínimo de inversión?",
-    answer: "Trabajo con patrimonios a partir de $500,000 USD para ofrecer atención personalizada."
+    answer: "El monto de inversión se adapta a tus metas de libertad financiera y a la estrategia para el desmonte de deudas, ya que cada plan es personalizado."
   },
   {
-    question: "¿Cómo garantizas la confidencialidad?",
-    answer: "Protocolos estrictos de confidencialidad y acuerdos de no divulgación con instituciones de primer nivel."
+    question: "¿Qué medidas tomamos para que tu información financiera esté 100% protegida?",
+    answer: "Implementamos protocolos de confidencialidad de alto nivel, con acuerdos de no divulgación respaldados por instituciones financieras reconocidas. Además, cada plan incluye un nivel de seguridad acorde al tipo de inversión, garantizando que tus datos, tus movimientos y tu estrategia estén blindados frente a terceros."
   },
   {
-    question: "¿Qué diferencia tu servicio?",
-    answer: "Enfoque completamente personalizado. Estrategias diseñadas específicamente para cada cliente con control total de activos."
+    question: "¿Por qué confiar tu estrategia financiera con nosotros y no con un servicio tradicional?",
+    answer: "No trabajamos con fórmulas estándar. Cada plan está diseñado a tu medida, con un enfoque que combina análisis técnico, gestión de riesgo y diversificación. Dependiendo de tu nivel de inversión y tus objetivos, recibirás un número específico de reuniones y reportes personalizados, para que siempre tengas claridad total sobre tus activos y decisiones."
   },
   {
-    question: "¿Con qué frecuencia revisamos la estrategia?",
-    answer: "Revisiones trimestrales obligatorias y reuniones adicionales según necesidad del mercado."
+    question: "¿Cada cuánto monitoreamos y ajustamos tu portafolio según el plan que elijas?",
+    answer: "Ofrecemos revisiones periódicas garantizadas, que dependen del plan que contrates: algunos incluyen reuniones mensuales o incluso quincenales, mientras que otros se enfocan en revisiones trimestrales estratégicas. Además, si el mercado presenta movimientos relevantes, activamos sesiones adicionales para que tu estrategia siempre esté al día y aproveches cada oportunidad."
   },
   {
-    question: "¿Cuáles son tus honorarios?",
-    answer: "Transparentes, basados en porcentaje de activos bajo gestión. Se discute en consulta inicial."
+    question: "¿Cómo sé si tu asesoría es la indicada para mí?",
+    answer: "Antes de iniciar, realizamos una consulta inicial sin compromiso en la que evaluamos tus objetivos financieros, tu perfil de riesgo y tu situación actual. De esta forma, sabrás si el servicio realmente encaja contigo antes de invertir."
   }
 ];
 

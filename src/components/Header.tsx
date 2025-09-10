@@ -26,7 +26,7 @@ const Header = () => {
         <div className="flex items-center justify-between">
           {/* Logo/Monogram */}
           <div className="relative">
-            <Link to="/" className="font-luxury text-2xl text-white hover:text-primary transition-colors">
+            <Link to="/#hero" className="font-luxury text-2xl text-white hover:text-primary transition-colors">
               AC
             </Link>
             {scrolled && (

@@ -125,7 +125,9 @@
     @apply border-border;
   }
 
-  body {
+body {
+  background-color: #1a3e6d;
+}
     @apply text-foreground overflow-x-hidden;
     background: var(--bg-page) !important;
     background-attachment: fixed;

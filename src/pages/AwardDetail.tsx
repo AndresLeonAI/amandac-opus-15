@@ -165,10 +165,10 @@ const AwardDetail = () => {
                   className="text-center mb-12"
                 >
                   <h2 className="font-luxury text-2xl md:text-3xl text-primary mb-4">
-                    Preguntas Frecuentes
+                    Preguntas clave sobre este reconocimiento
                   </h2>
                   <p className="font-elegant text-muted-foreground">
-                    Todo lo que necesitas saber sobre este reconocimiento
+                    Lo importante para ti: cómo se mide, quién lo valida y cómo mejora tu experiencia como cliente.
                   </p>
                 </motion.div>
 

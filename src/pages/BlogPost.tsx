@@ -100,10 +100,7 @@ const renderArticleContent = (post: typeof blogPosts[0]) => {
           </div>
         </section>
 
-        {/* Calculator Component */}
-        <FadeInScale delay={0.2}>
-          <EmergencyFundCalculator />
-        </FadeInScale>
+        {/* Remove Calculator Component */}
 
         <section className="space-y-8 reveal-up">
           <h2 className="font-luxury text-4xl text-foreground mb-6">¿Dónde ubicarlo? En capas (liquidez superior a rendimiento)</h2>

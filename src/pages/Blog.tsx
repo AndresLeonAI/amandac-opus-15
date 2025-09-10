@@ -9,6 +9,7 @@ import Footer from '@/components/Footer';
 import emergencyFundImage from '@/assets/blog-emergency-fund.jpg';
 import inflationImage from '@/assets/blog-inflation.jpg';
 import entrepreneursImage from '@/assets/blog-entrepreneurs.jpg';
+import WebGLShaderOceanLight from '@/components/ui/WebGLShaderOceanLight';
 
 const blogPosts = [
   {
@@ -154,11 +155,14 @@ const Blog = () => {
 
   return (
     <div className="min-h-screen">
+      {/* WebGL Ocean Background - Fixed behind content, not in hero */}
+      <WebGLShaderOceanLight className="pointer-events-none fixed inset-0 -z-10" />
+      
       <Header />
       
       <main className="relative z-10 pt-24">
         {/* Hero Section */}
-        <section className="py-16 relative">
+        <section className="py-16 relative bg-background">
           <div className="container mx-auto px-6">
             <motion.div
               className="text-center max-w-4xl mx-auto fade-in"
