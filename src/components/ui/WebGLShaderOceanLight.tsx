@@ -136,8 +136,13 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
       refs.scene = new THREE.Scene();
 
       // Create renderer on the provided canvas
-      refs.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-      refs.renderer.setPixelRatio(window.devicePixelRatio);
+      refs.renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: false,                 // móviles: menos memoria y más FPS
+        alpha: true,
+        powerPreference: "high-performance"
+      });
+      refs.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       // Ensure correct output color space on modern Three.js
       // @ts-ignore - property name varies across Three versions
       refs.renderer.outputColorSpace = (THREE as any).SRGBColorSpace || undefined;

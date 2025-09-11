@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import AboutAmanda from '@/components/AboutAmanda';
@@ -15,7 +15,16 @@ import CTASection from '@/components/CTASection';
 import GlobalFinancesCard from '@/components/GlobalFinancesCard';
 import Footer from '@/components/Footer';
 import WebGLShaderOceanLight from '@/components/ui/WebGLShaderOceanLight';
+import LuxuryDollarLoader from '@/components/LuxuryDollarLoader';
+
 const Index = () => {
+  const [booting, setBooting] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setBooting(false), 3500); // 3.5s exactos
+    return () => clearTimeout(t);
+  }, []);
+
   useEffect(() => {
     // Initialize scroll animations
     const observeElements = () => {
@@ -52,11 +61,13 @@ const Index = () => {
       document.removeEventListener('click', handleSmoothScroll);
     };
   }, []);
-  return <div className="cursor-glow overflow-x-hidden relative">
-      {/* WebGL Ocean Background - Fixed behind content, not in hero */}
-      <WebGLShaderOceanLight className="pointer-events-none fixed inset-0 -z-10" />
-      
-      <div className="relative z-10">
+  return (
+    <>
+      {/* WebGL detrás pero visible */}
+      <WebGLShaderOceanLight className="pointer-events-none fixed inset-0 z-0" />
+
+      {/* Contenido principal */}
+      <div className="cursor-glow overflow-x-hidden relative z-10">
         <Header />
         <main>
           <Hero />
@@ -64,7 +75,6 @@ const Index = () => {
           <Services />
           <section id="trust-section" className="py-16">
             <div className="container mx-auto px-6">
-              
               <TrustBanner />
             </div>
           </section>
@@ -79,6 +89,22 @@ const Index = () => {
         </main>
         <Footer />
       </div>
-    </div>;
+
+      {/* Preloader sobre todo y con fade-out suave */}
+      <AnimatePresence>
+        {booting && (
+          <motion.div
+            className="fixed inset-0 z-50"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+          >
+            <LuxuryDollarLoader />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
 };
 export default Index;
