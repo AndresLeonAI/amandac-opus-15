@@ -198,7 +198,7 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
 
     /** Animation loop with pause on hidden tab to save resources */
     const animate = () => {
-      if (!refs.isRunning) {
+      if (!refs.isRunning || document.hidden) {
         refs.animationId = requestAnimationFrame(animate);
         return;
       }
@@ -209,13 +209,17 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
       refs.animationId = requestAnimationFrame(animate);
     };
 
-    /** Keep canvas and uniforms in sync with the window size */
+    /** Keep canvas and uniforms in sync with the window size (debounced) */
+    let resizeTimeout: any;
     const handleResize = () => {
-      if (!refs.renderer || !refs.uniforms) return;
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      refs.renderer.setSize(width, height, false);
-      refs.uniforms.resolution.value = [width, height];
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (!refs.renderer || !refs.uniforms) return;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        refs.renderer.setSize(width, height, false);
+        refs.uniforms.resolution.value = [width, height];
+      }, 120);
     };
 
     /** Pause/resume when tab visibility changes (optional optimization) */
@@ -225,8 +229,8 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
 
     initScene();
     animate();
-    window.addEventListener("resize", handleResize);
-    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("resize", handleResize, { passive: true });
+    document.addEventListener("visibilitychange", handleVisibility, { passive: true });
 
     /** Thorough cleanup on unmount */
     return () => {
