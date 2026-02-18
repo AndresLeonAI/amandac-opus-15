@@ -1,70 +1,81 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 
 const Header = () => {
+  const { scrollY } = useScroll();
+  const [hidden, setHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    const previous = scrollY.getPrevious() ?? 0;
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    // Show/Hide logic
+    if (latest > previous && latest > 150) {
+      setHidden(true); // Hide on scroll down
+    } else {
+      setHidden(false); // Show on scroll up
+    }
+
+    // Background logic
+    setScrolled(latest > 50);
+  });
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? 'bg-background/80 backdrop-blur-md border-b border-border/50'
-          : 'bg-transparent'
-      }`}
+    <motion.header
+      variants={{
+        visible: { y: 0 },
+        hidden: { y: "-100%" },
+      }}
+      animate={hidden ? "hidden" : "visible"}
+      transition={{ duration: 0.35, ease: "easeInOut" }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-500`}
     >
-      <div className="container mx-auto px-6 py-4">
+      {/* Glassmorphism Background Container */}
+      <div className={`absolute inset-0 transition-all duration-700 ${scrolled
+          ? 'bg-black/10 backdrop-blur-xl border-b border-white/5 shadow-sm supports-[backdrop-filter]:bg-black/5'
+          : 'bg-transparent border-transparent'
+        }`} />
+
+      <div className="container mx-auto px-6 py-4 relative z-10">
         <div className="flex items-center justify-between">
           {/* Logo/Monogram */}
-          <div className="relative">
-            <Link to="/#hero" className="font-luxury text-2xl text-white hover:text-primary transition-colors">
+          <div className="relative group cursor-pointer">
+            <Link to="/#hero" className="font-luxury text-2xl text-white transition-opacity duration-300 hover:opacity-80">
               AC
             </Link>
-            {scrolled && (
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full opacity-60" />
-            )}
           </div>
 
           {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <a href="/#asesoria-estrategia" className="font-luxury text-white/90 hover:text-white animated-underline transition-colors">
-              Servicios
-            </a>
-            <a href="/#proceso-meticuloso" className="font-luxury text-white/90 hover:text-white animated-underline transition-colors">
-              Proceso
-            </a>
-            <Link to="/premios" className="font-luxury text-white/90 hover:text-white animated-underline transition-colors">
-              Premios
-            </Link>
-            <Link to="/blog" className="font-luxury text-white/90 hover:text-white animated-underline transition-colors">
-              Blog
-            </Link>
-            <a href="/#testimonios" className="font-luxury text-white/90 hover:text-white animated-underline transition-colors">
-              Testimonios
-            </a>
+          <nav className="hidden md:flex items-center space-x-10">
+            {['Servicios', 'Proceso', 'Premios', 'Blog', 'Testimonios'].map((item) => {
+              const href = item === 'Premios' ? '/premios' : item === 'Blog' ? '/blog' : `/#${item.toLowerCase().replace(' ', '-')}`;
+              // Special mapping for anchors if needed, for now simple lowercase
+              const finalHref = item === 'Servicios' ? '/#asesoria-estrategia' :
+                item === 'Proceso' ? '/#proceso-meticuloso' :
+                  item === 'Testimonios' ? '/#testimonios' : href;
+
+              return (
+                <a key={item} href={finalHref} className="font-sans text-sm tracking-widest text-white/70 hover:text-white transition-colors uppercase">
+                  {item}
+                </a>
+              )
+            })}
           </nav>
 
           {/* CTA Button */}
-          <Button 
+          <Button
             variant="premium"
             size="sm"
-            className="font-luxury tracking-wide hover:scale-102 transition-all duration-200"
+            className="font-luxury tracking-wide bg-white text-black hover:bg-white/90 hover:scale-105 transition-all duration-300 rounded-full px-6"
             onClick={() => window.open('https://wa.me/573114688067?text=Hola%20Amanda,%20me%20interesa%20agendar%20una%20consulta%20financiera.', '_blank')}
           >
             Agendar
           </Button>
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 };
 

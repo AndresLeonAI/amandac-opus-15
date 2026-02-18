@@ -140,7 +140,8 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
         canvas,
         antialias: false,                 // móviles: menos memoria y más FPS
         alpha: true,
-        powerPreference: "high-performance"
+        powerPreference: "high-performance",
+        premultipliedAlpha: false,
       });
       refs.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       // Ensure correct output color space on modern Three.js
@@ -152,7 +153,7 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
       const bottomBlue = new THREE.Color(bottomColor);
 
       // Clear color matches bottom of gradient to avoid any black frame
-      refs.renderer.setClearColor(bottomBlue);
+      refs.renderer.setClearColor(0x000000, 0);
 
       // Fullscreen orthographic camera
       refs.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
@@ -172,11 +173,11 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
       // Two triangles forming a full-screen quad
       const position = [
         -1.0, -1.0, 0.0,
-         1.0, -1.0, 0.0,
-        -1.0,  1.0, 0.0,
-         1.0, -1.0, 0.0,
-        -1.0,  1.0, 0.0,
-         1.0,  1.0, 0.0,
+        1.0, -1.0, 0.0,
+        -1.0, 1.0, 0.0,
+        1.0, -1.0, 0.0,
+        -1.0, 1.0, 0.0,
+        1.0, 1.0, 0.0,
       ];
 
       const positions = new THREE.BufferAttribute(new Float32Array(position), 3);

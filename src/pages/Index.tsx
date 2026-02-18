@@ -67,7 +67,7 @@ const Index = () => {
       <WebGLShaderOceanLight className="pointer-events-none fixed inset-0 z-0" />
 
       {/* Contenido principal */}
-      <div className="cursor-glow overflow-x-hidden relative z-10">
+      <div className="cursor-glow relative z-10">
         <Header />
         <main>
           <Hero />
