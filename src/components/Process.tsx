@@ -1,55 +1,37 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useState, useEffect, type MouseEvent } from 'react';
 import { Search, Target, Users, type LucideIcon } from 'lucide-react';
 import {
   motion,
   useScroll,
-  useTransform,
   useSpring,
+  useTransform,
+  useVelocity,
   useMotionValue,
-  useInView,
+  useMotionTemplate,
+  cubicBezier,
   type MotionValue,
-  type Variants,
 } from 'framer-motion';
 
-/* ═══════════════════════════════════════════════
-   Constants & Curves
-   ═══════════════════════════════════════════════ */
-const EXPO_OUT: [number, number, number, number] = [0.16, 1, 0.3, 1];
-const SILK: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94];
+/* ═══════════════════════════════════════════════════════════════════════════
+   EASINGS 
+   ═══════════════════════════════════════════════════════════════════════════ */
+// High-end cinematic curve
+const EXPO_OUT = cubicBezier(0.16, 1, 0.3, 1);
+const SILK = cubicBezier(0.25, 0.46, 0.45, 0.94);
 
-/* Noise — cinemática grain */
-const NOISE_SVG = `
-<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'>
-  <filter id='n'>
-    <feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/>
-    <feColorMatrix type='saturate' values='0'/>
-  </filter>
-  <rect width='300' height='300' filter='url(#n)' opacity='1'/>
-</svg>`;
-const noiseDataUri = `url("data:image/svg+xml,${encodeURIComponent(NOISE_SVG)}")`;
-
-/* Typography tokens */
-const GRADIENT_TEXT =
-  'bg-gradient-to-b from-white via-white/90 to-white/60 bg-clip-text text-transparent';
-const GRADIENT_TEXT_MUTED =
-  'bg-gradient-to-b from-white/80 via-white/60 to-white/40 bg-clip-text text-transparent';
-
-/* ═══════════════════════════════════════════════
-   DATA — 3 editorial steps
-   ═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════
+   DATA
+   ═══════════════════════════════════════════════════════════════════════════ */
 const steps = [
   {
     number: '01',
     icon: Search,
     title: 'Diagnóstico',
-    subtitle:
-      'Análisis profundo de su situación actual y objetivos específicos',
+    subtitle: 'Análisis profundo de su situación actual y objetivos específicos',
     spec: '[ PHASE.01 — AUDIT ]',
-    atmosphere: {
-      primary: 'radial-gradient(ellipse 80% 70% at 30% 40%, hsl(225 80% 20% / 0.5), transparent 70%)',
-      secondary: 'radial-gradient(ellipse 60% 50% at 70% 60%, hsl(240 60% 15% / 0.3), transparent 60%)',
-      accent: 'radial-gradient(ellipse 40% 40% at 50% 30%, hsl(220 100% 50% / 0.06), transparent 50%)',
-    },
+    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1400&q=85',
+    blurredImage: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&blur=150&q=30',
+    imagePosition: 'center 45%',
     userActions: [
       'Comparte su situación financiera actual',
       'Define objetivos claros y plazos',
@@ -57,7 +39,7 @@ const steps = [
     ],
     ourActions: [
       'Auditamos su cartera existente',
-      'Identificamos gaps y oportunidades',
+      'Identificamos brechas y oportunidades',
       'Diseñamos estrategia personalizada',
     ],
   },
@@ -65,14 +47,11 @@ const steps = [
     number: '02',
     icon: Target,
     title: 'Estrategia',
-    subtitle:
-      'Desarrollo de plan de acción adaptado a su perfil y metas',
+    subtitle: 'Desarrollo de plan de acción adaptado a su perfil y metas',
     spec: '[ PHASE.02 — STRATEGY ]',
-    atmosphere: {
-      primary: 'radial-gradient(ellipse 70% 60% at 60% 35%, hsl(210 70% 18% / 0.5), transparent 65%)',
-      secondary: 'radial-gradient(ellipse 50% 50% at 30% 70%, hsl(195 60% 15% / 0.35), transparent 55%)',
-      accent: 'radial-gradient(ellipse 45% 35% at 55% 40%, hsl(200 100% 45% / 0.05), transparent 45%)',
-    },
+    image: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1400&q=85',
+    blurredImage: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=400&blur=150&q=30',
+    imagePosition: 'center 40%',
     userActions: [
       'Revisa la propuesta estratégica',
       'Pregunta y ajusta detalles',
@@ -88,14 +67,11 @@ const steps = [
     number: '03',
     icon: Users,
     title: 'Acompañamiento',
-    subtitle:
-      'Implementación y seguimiento continuo de resultados',
+    subtitle: 'Implementación y seguimiento continuo de resultados',
     spec: '[ PHASE.03 — CONTINUUM ]',
-    atmosphere: {
-      primary: 'radial-gradient(ellipse 75% 65% at 50% 45%, hsl(215 60% 16% / 0.45), transparent 65%)',
-      secondary: 'radial-gradient(ellipse 55% 45% at 25% 55%, hsl(30 40% 20% / 0.15), transparent 50%)',
-      accent: 'radial-gradient(ellipse 35% 30% at 70% 30%, hsl(35 80% 50% / 0.04), transparent 40%)',
-    },
+    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1400&q=85',
+    blurredImage: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=400&blur=150&q=30',
+    imagePosition: 'center 52%',
     userActions: [
       'Recibe reportes periódicos',
       'Participa en revisiones trimestrales',
@@ -111,560 +87,352 @@ const steps = [
 
 type StepData = (typeof steps)[number];
 
-/* ═══════════════════════════════════════════════
-   ANIMATION VARIANTS
-   ═══════════════════════════════════════════════ */
-const subtitleVariants: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: EXPO_OUT, delay: 0.2 },
-  },
-};
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRIMITIVES & MATERIALS 
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-const cardSlideVariants = (fromLeft: boolean): Variants => ({
-  hidden: {
-    opacity: 0,
-    x: fromLeft ? -60 : 60,
-    filter: 'blur(10px)',
-    scale: 0.97,
-  },
-  visible: {
-    opacity: 1,
-    x: 0,
-    filter: 'blur(0px)',
-    scale: 1,
-    transition: {
-      duration: 0.85,
-      ease: [0.22, 1, 0.36, 1],
-    },
-  },
-});
-
-const listStagger: Variants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.06, delayChildren: 0.25 } },
-};
-
-const listItemVariants: Variants = {
-  hidden: { opacity: 0, y: 12, filter: 'blur(3px)' },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: 'blur(0px)',
-    transition: { duration: 0.4, ease: SILK },
-  },
-};
-
-/* ═══════════════════════════════════════════════
-   MaskReveal — "Persiana" blind-up reveal
-   ═══════════════════════════════════════════════ */
-const MaskReveal = ({
-  children,
-  className = '',
-  delay = 0,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
-}) => (
+const MaskReveal = ({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number; }) => (
   <div className={`overflow-hidden ${className}`}>
     <motion.div
       variants={{
-        hidden: { y: '110%' },
-        visible: {
-          y: '0%',
-          transition: { duration: 1, delay, ease: [0.33, 1, 0.68, 1] },
-        },
+        hidden: { y: '112%', rotateX: 10, transformOrigin: 'top center' },
+        visible: { y: '0%', rotateX: 0, transition: { duration: 1.05, delay, ease: EXPO_OUT } },
       }}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: '-60px' }}
+      viewport={{ once: true, margin: '-12%' }}
+      className="will-change-transform"
     >
       {children}
     </motion.div>
   </div>
 );
 
-/* ═══════════════════════════════════════════════
-   SpotlightCard — frosted glass + mouse tracking
-   ═══════════════════════════════════════════════ */
-const SpotlightCard = ({
-  children,
-  className = '',
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) => {
-  const spotX = useMotionValue(0.5);
-  const spotY = useMotionValue(0.5);
-
-  const handleMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      spotX.set((e.clientX - rect.left) / rect.width);
-      spotY.set((e.clientY - rect.top) / rect.height);
-    },
-    [spotX, spotY],
-  );
-
-  const handleLeave = useCallback(() => {
-    spotX.set(0.5);
-    spotY.set(0.5);
-  }, [spotX, spotY]);
-
-  const spotlightBg = useTransform<number, string>(
-    [spotX, spotY],
-    ([x, y]: number[]) =>
-      `radial-gradient(500px circle at ${x * 100}% ${y * 100}%, rgba(255,255,255,0.06), transparent 55%)`,
-  );
-
-  const borderGlow = useTransform<number, string>(
-    [spotX, spotY],
-    ([x, y]: number[]) =>
-      `radial-gradient(400px circle at ${x * 100}% ${y * 100}%, rgba(255,255,255,0.12), rgba(255,255,255,0.03) 40%, transparent 70%)`,
-  );
-
-  return (
-    <motion.div
-      className={`relative group ${className}`}
-      onMouseMove={handleMove}
-      onMouseLeave={handleLeave}
-      whileHover={{ scale: 1.015 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 26 }}
-    >
-      {/* Border glow layer */}
-      <motion.div
-        className="absolute -inset-px rounded-2xl pointer-events-none z-0
-                    opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        style={{ background: borderGlow }}
-      />
-
-      {/* Card body */}
-      <div
-        className="relative z-10 rounded-2xl overflow-hidden
-          bg-white/[0.02] backdrop-blur-xl
-          border border-white/[0.06]
-          group-hover:border-white/[0.1]
-          transition-[border-color] duration-500"
-      >
-        {/* Spotlight follow */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none z-20 rounded-2xl
-                      opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{ background: spotlightBg }}
-        />
-
-        {/* Noise texture */}
-        <div
-          className="absolute inset-0 pointer-events-none z-10 rounded-2xl"
-          style={{
-            backgroundImage: noiseDataUri,
-            backgroundRepeat: 'repeat',
-            opacity: 0.025,
-            mixBlendMode: 'overlay',
-          }}
-        />
-
-        {/* Content */}
-        <div className="relative z-30">{children}</div>
-      </div>
-    </motion.div>
-  );
-};
-
-/* ═══════════════════════════════════════════════
-   TimelineNode — pulsing icon on the spine
-   ═══════════════════════════════════════════════ */
-const TimelineNode = ({
-  icon: Icon,
-  isActive,
-}: {
-  icon: LucideIcon;
-  isActive: boolean;
-}) => (
+const TimelineNode = ({ icon: Icon, isActive }: { icon: LucideIcon; isActive: boolean; }) => (
   <div className="relative flex items-center justify-center">
-    {/* Ripple */}
-    <motion.div
-      className="absolute inset-[-4px] rounded-full border border-white/20"
-      initial={false}
-      animate={
-        isActive
-          ? { scale: [1, 2.4, 2.8], opacity: [0.4, 0.1, 0] }
-          : { scale: 1, opacity: 0 }
-      }
-      transition={{
-        duration: 1.6,
-        repeat: isActive ? Infinity : 0,
-        repeatDelay: 2,
-        ease: 'easeOut',
-      }}
-    />
-
-    {/* Outer halo */}
-    <motion.div
-      className="absolute inset-[-8px] rounded-full pointer-events-none"
-      animate={
-        isActive
-          ? {
-            boxShadow: [
-              '0 0 0px 0px rgba(255,255,255,0)',
-              '0 0 24px 6px rgba(255,255,255,0.15)',
-              '0 0 12px 3px rgba(255,255,255,0.08)',
-            ],
-          }
-          : { boxShadow: '0 0 0px 0px rgba(255,255,255,0)' }
-      }
-      transition={{
-        duration: 2.4,
-        repeat: Infinity,
-        repeatType: 'reverse',
-        ease: 'easeInOut',
-      }}
-    />
-
-    {/* Node body */}
-    <motion.div
-      className={`
-        relative w-11 h-11 rounded-full flex items-center justify-center
-        border backdrop-blur-md transition-colors duration-600
-        ${isActive
-          ? 'bg-white/[0.08] border-white/20'
-          : 'bg-slate-900/80 border-white/[0.06]'
-        }
-      `}
-      animate={isActive ? { scale: [1, 1.25, 1] } : { scale: 1 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-    >
-      <Icon
-        className={`w-[18px] h-[18px] transition-colors duration-500
-                    ${isActive ? 'text-white/70' : 'text-white/20'}`}
-        strokeWidth={1.2}
-      />
-    </motion.div>
+    <div className={`w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center border transition-all duration-700 ${isActive ? 'bg-white/10 border-white/20 scale-100' : 'bg-transparent border-white/5 opacity-50 scale-90'}`}>
+      <Icon className={`w-4 h-4 md:w-5 md:h-5 transition-colors duration-700 ${isActive ? 'text-white' : 'text-white/40'}`} strokeWidth={1.5} />
+    </div>
   </div>
 );
 
-/* ═══════════════════════════════════════════════
-   EcosystemCard — Client | Team split
-   ═══════════════════════════════════════════════ */
-const EcosystemCard = ({
-  step,
-  fromLeft,
-}: {
-  step: StepData;
-  fromLeft: boolean;
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-10% 0px' });
+/** 
+ * Obsidian Contour Card: "Luz de Contorno Táctil"
+ * A pure black 40% card with a localized magnetic radial light revealing a 1px border.
+ */
+const ObsidianEcosystemCard = ({ step }: { step: StepData }) => {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
 
-  return (
-    <motion.div
-      ref={ref}
-      className="relative will-change-transform"
-      variants={cardSlideVariants(fromLeft)}
-      initial="hidden"
-      animate={isInView ? 'visible' : 'hidden'}
-    >
-      <SpotlightCard>
-        <div className="p-8 lg:p-10 relative">
-          {/* Watermark number */}
-          <span
-            className="absolute -top-8 -right-3 font-luxury text-[10rem] lg:text-[12rem] leading-none
-                        select-none pointer-events-none"
-            style={{
-              color: 'rgba(255,255,255,0.02)',
-              mixBlendMode: 'overlay',
-            }}
-            aria-hidden="true"
-          >
-            {step.number}
-          </span>
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    const { left, top } = e.currentTarget.getBoundingClientRect();
+    mouseX.set(e.clientX - left);
+    mouseY.set(e.clientY - top);
+  };
 
-          {/* Two-column split */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 relative">
-
-            {/* Client */}
-            <div className="pr-0 sm:pr-8 pb-6 sm:pb-0">
-              <h4
-                className="font-mono text-[9px] tracking-[0.3em] uppercase
-                           text-white/25 mb-5 flex items-center gap-2.5"
-              >
-                <span className="w-5 h-px bg-white/15" />
-                Cliente
-              </h4>
-              <motion.ul
-                className="space-y-3.5"
-                variants={listStagger}
-                initial="hidden"
-                animate={isInView ? 'visible' : 'hidden'}
-              >
-                {step.userActions.map((action, i) => (
-                  <motion.li
-                    key={i}
-                    variants={listItemVariants}
-                    className="flex items-start gap-3"
-                  >
-                    <span className="mt-[7px] w-1 h-1 rounded-full bg-white/20 flex-shrink-0" />
-                    <span className="font-elegant text-[13px] leading-relaxed bg-gradient-to-b from-white/80 to-white/50 bg-clip-text text-transparent">
-                      {action}
-                    </span>
-                  </motion.li>
-                ))}
-              </motion.ul>
-            </div>
-
-            {/* Vertical divider */}
-            <div
-              className="hidden sm:block absolute left-1/2 top-0 bottom-0 w-px
-                          bg-gradient-to-b from-transparent via-white/[0.05] to-transparent"
-              aria-hidden="true"
-            />
-
-            {/* Team */}
-            <div className="pl-0 sm:pl-8 pt-6 sm:pt-0 border-t sm:border-t-0 border-white/[0.03]">
-              <h4
-                className="font-mono text-[9px] tracking-[0.3em] uppercase
-                           text-white/25 mb-5 flex items-center gap-2.5"
-              >
-                <span className="w-5 h-px bg-white/10" />
-                Nosotros
-              </h4>
-              <motion.ul
-                className="space-y-3.5"
-                variants={listStagger}
-                initial="hidden"
-                animate={isInView ? 'visible' : 'hidden'}
-              >
-                {step.ourActions.map((action, i) => (
-                  <motion.li
-                    key={i}
-                    variants={listItemVariants}
-                    className="flex items-start gap-3"
-                  >
-                    <span className="mt-[7px] w-1 h-1 rounded-full bg-white/10 flex-shrink-0" />
-                    <span className="font-elegant text-[13px] leading-relaxed bg-gradient-to-b from-white/60 to-white/35 bg-clip-text text-transparent">
-                      {action}
-                    </span>
-                  </motion.li>
-                ))}
-              </motion.ul>
-            </div>
-          </div>
-
-          {/* Bottom accent */}
-          <div
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-px
-                        bg-gradient-to-r from-transparent via-white/10 to-transparent
-                        opacity-0 group-hover:opacity-100 transition-opacity duration-700"
-            aria-hidden="true"
-          />
-        </div>
-      </SpotlightCard>
-    </motion.div>
-  );
-};
-
-/* ═══════════════════════════════════════════════
-   ProcessPanel — Full-viewport sticky editorial panel
-   ═══════════════════════════════════════════════ */
-const ProcessPanel = ({
-  step,
-  index,
-  totalSteps,
-  scrollProgress,
-}: {
-  step: StepData;
-  index: number;
-  totalSteps: number;
-  scrollProgress: MotionValue<number>;
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { margin: '-35% 0px -35% 0px' });
-  const isEven = index % 2 === 0;
-
-  /* Per-panel scroll ranges */
-  const panelStart = index / totalSteps;
-  const panelEnd = (index + 1) / totalSteps;
-
-  /* Panel content opacity — fades in/out per range */
-  const contentOpacity = useTransform(
-    scrollProgress,
-    [
-      Math.max(0, panelStart - 0.05),
-      panelStart + 0.02,
-      panelEnd - 0.05,
-      Math.min(1, panelEnd),
-    ],
-    [0, 1, 1, index === totalSteps - 1 ? 1 : 0],
-  );
-
-  /* Subtle vertical parallax for the title text */
-  const titleY = useTransform(
-    scrollProgress,
-    [panelStart, panelEnd],
-    [30, -20],
-  );
+  const borderMaskOverlay = useMotionTemplate`radial-gradient(400px circle at ${mouseX}px ${mouseY}px, white, transparent 60%)`;
 
   return (
     <div
-      ref={ref}
-      style={{ height: `${100 / totalSteps * 100}vh` }}
-      className="relative"
+      className="relative rounded-[1.25rem] bg-[#00000066] border border-transparent backdrop-blur-none group overflow-hidden"
+      onMouseMove={handleMouseMove}
     >
-      {/* Sticky viewport panel */}
-      <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
+      {/* 
+        Hover Light Gradient for the border: strictly encapsulated and avoids DOM repaints globally,
+        using 1px mask padding technique. No slow filter blurs around edges.
+      */}
+      <motion.div
+        className="absolute inset-0 z-0 pointer-events-none rounded-[1.25rem] p-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out will-change-transform"
+        style={{
+          background: "linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.05))",
+          WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+          WebkitMaskComposite: "xor",
+          maskComposite: "exclude",
+          maskImage: borderMaskOverlay,
+        }}
+        aria-hidden="true"
+      />
 
-        {/* ── Atmospheric gradient background (unique per step) ── */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          style={{ opacity: contentOpacity }}
-        >
-          <div
-            className="absolute inset-0"
-            style={{ background: step.atmosphere.primary }}
-          />
-          <div
-            className="absolute inset-0"
-            style={{ background: step.atmosphere.secondary }}
-          />
-          <motion.div
-            className="absolute inset-0"
-            animate={{
-              opacity: [0.5, 1, 0.5],
-              scale: [1, 1.08, 1],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            style={{ background: step.atmosphere.accent }}
-          />
-        </motion.div>
+      {/* Fallback subtle static border for when not hovering */}
+      <div className="absolute inset-0 pointer-events-none rounded-[1.25rem] border border-white/5 z-0" />
 
-        {/* ── Content container ── */}
-        <motion.div
-          className="container mx-auto px-6 relative z-10 max-w-7xl"
-          style={{ opacity: contentOpacity }}
-        >
-          {/* ── Top: Giant editorial title area ── */}
-          <div className="mb-16 lg:mb-20">
-            {/* Spec label */}
-            <motion.span
-              className="block font-mono text-[9px] tracking-[0.4em] uppercase text-white/20 mb-6"
-              variants={subtitleVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-            >
-              {step.spec}
-            </motion.span>
+      {/* Content wrapper */}
+      <div className="p-6 md:p-8 relative z-10 w-full flex flex-col justify-between">
+        <div className="flex items-center gap-4 mb-5 md:mb-6">
+          <TimelineNode icon={step.icon} isActive />
+          <h4 className="font-mono text-[10px] md:text-[11px] tracking-[0.45em] uppercase text-white/60">
+            {step.spec}
+          </h4>
+        </div>
 
-            {/* Giant step number + title lockup */}
-            <div className="relative">
-              {/* Massive watermark number — background */}
-              <motion.span
-                className="absolute -top-16 lg:-top-28 -left-4 lg:-left-8 font-luxury
-                           text-[8rem] md:text-[12rem] lg:text-[18rem] leading-none
-                           select-none pointer-events-none"
-                style={{
-                  color: 'rgba(255,255,255,0.018)',
-                }}
-                initial={{ opacity: 0, scale: 0.85 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1.2, ease: SILK }}
-                aria-hidden="true"
-              >
-                {step.number}
-              </motion.span>
+        <div className="mb-6 md:mb-8">
+          <p className="font-luxury text-xl md:text-2xl leading-[1.25] text-white tracking-[-0.01em]">
+            {step.subtitle}
+          </p>
+        </div>
 
-              {/* Title — enormous serif with gradient lighting */}
-              <motion.div style={{ y: titleY }} className="relative z-10">
-                <MaskReveal>
-                  <h3
-                    className={`font-luxury text-5xl md:text-7xl lg:text-[6.5rem] xl:text-[7.5rem]
-                                leading-[0.95] tracking-[-0.02em] ${GRADIENT_TEXT}`}
-                  >
-                    {step.title}
-                  </h3>
-                </MaskReveal>
-
-                {/* Subtitle */}
-                <motion.p
-                  className={`font-elegant text-base lg:text-lg leading-relaxed max-w-lg mt-5 lg:mt-7 ${GRADIENT_TEXT_MUTED}`}
-                  variants={subtitleVariants}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                >
-                  {step.subtitle}
-                </motion.p>
-
-                {/* Decorative line */}
-                <motion.div
-                  className="w-16 h-px mt-7"
-                  style={{
-                    background: 'linear-gradient(to right, rgba(255,255,255,0.2), transparent)',
-                  }}
-                  initial={{ scaleX: 0, opacity: 0 }}
-                  whileInView={{ scaleX: 1, opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.5, duration: 0.8, ease: SILK }}
-                />
-              </motion.div>
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6 relative">
+          <div className="pr-4">
+            <h5 className="font-mono text-[9px] md:text-[10px] tracking-[0.35em] uppercase text-white/40 mb-3 block">Cliente</h5>
+            <ul className="space-y-3">
+              {step.userActions.map((action, i) => (
+                <li key={i} className="flex items-start gap-2.5">
+                  <span className="mt-[6px] md:mt-[7px] w-1.5 h-1.5 bg-white/50 flex-shrink-0 rounded-full" />
+                  <span className="font-elegant text-xs md:text-sm text-white/70 leading-relaxed">{action}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
-          {/* ── Bottom: Two ecosystem cards side by side ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-            <EcosystemCard step={step} fromLeft={true} />
-            {/* Right card gets slight delay by being a separate InView trigger */}
-            <div className="lg:mt-8">
-              {/* Phase indicator between cards on mobile */}
-              <div className="flex items-center justify-center lg:hidden mb-6">
-                <TimelineNode icon={step.icon} isActive={isInView} />
-              </div>
-              {/* Second card mirrors the first with opposite slide direction */}
-              <motion.div
-                className="relative"
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-10%' }}
-                transition={{ duration: 0.8, ease: EXPO_OUT, delay: 0.15 }}
-              >
-                <SpotlightCard>
-                  <div className="p-8 lg:p-10 relative">
-                    {/* CTA-style summary */}
-                    <h4 className="font-mono text-[9px] tracking-[0.3em] uppercase text-white/20 mb-5 flex items-center gap-2.5">
-                      <span className="w-5 h-px bg-white/10" />
-                      Resultado
-                    </h4>
-                    <p className={`font-luxury text-2xl lg:text-3xl leading-[1.2] tracking-[-0.01em] ${GRADIENT_TEXT} mb-4`}>
-                      {step.subtitle}
-                    </p>
-                    <div className="flex items-center gap-3 mt-6">
-                      <TimelineNode icon={step.icon} isActive={isInView} />
-                      <span className="font-elegant text-xs uppercase tracking-[0.25em] text-white/25">
-                        {step.spec}
-                      </span>
-                    </div>
-                  </div>
-                </SpotlightCard>
-              </motion.div>
-            </div>
+          <div className="hidden sm:block absolute left-1/2 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-white/10 to-transparent" />
+
+          <div className="pl-0 sm:pl-6 pt-5 sm:pt-0 border-t sm:border-t-0 border-white/10">
+            <h5 className="font-mono text-[9px] md:text-[10px] tracking-[0.35em] uppercase text-[#d9b46b] mb-3 block">Nosotros</h5>
+            <ul className="space-y-3">
+              {step.ourActions.map((action, i) => (
+                <li key={i} className="flex items-start gap-2.5">
+                  <span className="mt-[6px] md:mt-[7px] w-1.5 h-1.5 bg-[#d9b46b]/80 flex-shrink-0 rounded-full" />
+                  <span className="font-elegant text-xs md:text-sm text-white/90 leading-relaxed">{action}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
 };
 
-/* ═══════════════════════════════════════════════
-   PROCESS — Root "The Luminous Path"
-   ═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPATIAL PANEL (VOLUMETRIC ORCHESTRATOR)
+   ═══════════════════════════════════════════════════════════════════════════ */
+const SpatialPanel = ({ step, index, totalSteps, scrollProgress, smoothVel }: { step: StepData; index: number; totalSteps: number; scrollProgress: MotionValue<number>; smoothVel: MotionValue<number> }) => {
+  // ── 1. Hero Compensation (Scroll Mapping Offset) ──
+  // Container logic: 400vh total. Viewport: 100vh. Scroll distance = 300vh.
+  const heroOffset = 0.25;
+  const usableScroll = 0.75;
+  const segLen = usableScroll / totalSteps;
+
+  const panelStart = heroOffset + (index * segLen);
+  const panelEnd = panelStart + segLen;
+
+  const isLast = index === totalSteps - 1;
+
+  // ── 2. Strict Dead Zones & Last Panel Immortality ──
+  // Fade in takes 25% of the panel's active window. Fade out takes the last 25%.
+  const enterEnd = panelStart + (segLen * 0.25);
+  const baseExitStart = panelEnd - (segLen * 0.25);
+  const baseAbsoluteExit = panelEnd - 0.02;
+
+  // If this is the last panel, we lock its exit transitions far beyond 1.0.
+  // This physically locks the panel in its active state (opacity 1, block) forever.
+  const exitStart = isLast ? 1.5 : baseExitStart;
+  const absoluteExit = isLast ? 1.5 : baseAbsoluteExit;
+
+  // Track if this panel is somewhat inside viewport to toggle will-change and pointer-events
+  // Ensure we add the extra buffer so that it catches properly, but derived states will do the heavy lifting
+  const [isActive, setIsActive] = useState(false);
+
+  useEffect(() => {
+    return scrollProgress.on('change', (v) => {
+      // Tight buffer specifically around our active timeline to reclaim GPU layout
+      const buffer = 0.01;
+      const isInside = v >= (panelStart - buffer) && v <= (absoluteExit + buffer);
+      setIsActive(isInside);
+    });
+  }, [scrollProgress, panelStart, absoluteExit]);
+
+  // ──────────────────────────────────────────────
+  // Z-Space Routing (Túnel Volumétrico) & Opacity
+  // ──────────────────────────────────────────────
+  const panelAlpha = useTransform(
+    scrollProgress,
+    [panelStart - 0.001, panelStart, enterEnd, exitStart, absoluteExit, absoluteExit + 0.001],
+    [0, 0, 1, 1, 0, 0]
+  );
+
+  // Replaces textScale/imgScale with a unified Z-Axis volumetric route
+  const tunnelZ = useTransform(
+    scrollProgress,
+    [panelStart, enterEnd, exitStart, absoluteExit],
+    [800, 0, 0, -800] // COMES FROM BEHIND (+800), SINKS INTO SCREEN (-800)
+  );
+
+  const textOpacity = panelAlpha;
+
+  // ──────────────────────────────────────────────
+  // Optical Compositing (GPU friendly Rack Focus)
+  // No realtime blur filters. Instead, fading in a pre-blurred image asset.
+  // ──────────────────────────────────────────────
+  const blurLayerOpacity = useTransform(
+    scrollProgress,
+    [exitStart, absoluteExit],
+    [0, 1]
+  );
+
+  const sharpLayerOpacity = useTransform(
+    scrollProgress,
+    [exitStart, absoluteExit],
+    [1, 0.4]
+  );
+
+  const internalImgScale = useTransform(
+    scrollProgress,
+    [panelStart, enterEnd],
+    [1.4, 1]
+  );
+
+  const imgClipPath = useTransform(
+    scrollProgress,
+    [panelStart, enterEnd],
+    ['inset(100% 0% 0% 0%)', 'inset(0% 0% 0% 0%)']
+  );
+
+  // ──────────────────────────────────────────────
+  // 3D Liquid Inertia Rotation based on Velocity
+  // ──────────────────────────────────────────────
+  const rotateX = useTransform(smoothVel, [-2, 2], [-8, 8]);
+  const rotateY = useTransform(smoothVel, [-2, 2], [8, -8]);
+  const skewY = useTransform(smoothVel, [-2, 2], [3, -3]);
+
+  // ──────────────────────────────────────────────
+  // Kinetic Depth (Fuerza G / Inercia)
+  // ──────────────────────────────────────────────
+  // Maps absolute extreme velocity to a recessed scale for the whole container
+  const kineticScale = useTransform(smoothVel, [-2, 0, 2], [0.95, 1, 0.95]);
+
+  // ──────────────────────────────────────────────
+  // Clean UI Drop without expensive filters
+  // ──────────────────────────────────────────────
+  const uiDropY = useTransform(scrollProgress, [exitStart, absoluteExit], [0, 120]);
+  const uiOpacity = panelAlpha;
+
+  // Deep continuous parallax for Macro-Text
+  const bgTextY = useTransform(scrollProgress, [panelStart, panelEnd], ['10%', '-40%']);
+
+  // Strictly bind pointer events and global opacity to the active lifecycle window
+  // "Destrucción de Stack Contextual Fantasma": None blocks interaction when dead.
+  const pointerState = useTransform(scrollProgress, (p) => (p >= panelStart && p <= absoluteExit) ? 'auto' : 'none');
+  const displayState = useTransform(scrollProgress, (p) => (p >= panelStart - 0.01 && p <= absoluteExit + 0.01) ? 'block' : 'none');
+  const panelOpacity = useTransform(scrollProgress, [panelStart - 0.001, panelStart, absoluteExit, absoluteExit + 0.001], [0, 1, 1, 0]);
+
+  return (
+    <motion.div
+      className="absolute inset-0 w-full h-full transform-gpu"
+      style={{
+        zIndex: 10 + index,
+        opacity: panelOpacity,
+        display: displayState as any,
+        pointerEvents: pointerState as any,
+        perspective: '1200px', // Required for realistic Z-Axis translation and rotation
+        scale: kineticScale, // Extreme Immersion G-Force
+      }}
+    >
+      {/* ── Macro-Text (Asymmetric Deep Background Z-0) ── */}
+      <motion.div
+        className={`absolute inset-0 flex items-center justify-center pointer-events-none ${isActive ? 'will-change-transform' : ''}`}
+        style={{ y: bgTextY, opacity: textOpacity, zIndex: 0 }}
+      >
+        <span
+          className="font-luxury text-[25vw] sm:text-[22vw] md:text-[20vw] lg:text-[24vw] leading-[0.85] tracking-[-0.03em] text-white/[0.03] whitespace-nowrap"
+          style={{ transform: 'translate3d(0,0,0)' }} // Enforces subpixel text rendering
+        >
+          {step.number}
+        </span>
+      </motion.div>
+
+      {/* ── Text Centerpiece Z-Axis Levitation (Left Positioned Z-10) ── */}
+      <motion.div
+        className={`absolute left-[6%] md:left-[8%] lg:left-[10%] top-[15%] sm:top-[20%] md:top-[28%] lg:top-[35%] z-10 max-w-sm md:max-w-xl pointer-events-none transform-gpu ${isActive ? 'will-change-transform' : ''}`}
+        style={{
+          opacity: textOpacity,
+          z: tunnelZ,
+          transformOrigin: '50% 100%'
+        }}
+      >
+        <span className="block font-mono text-[9px] md:text-[10px] tracking-[0.45em] uppercase text-white/50 mb-4 md:mb-6">
+          {step.spec}
+        </span>
+        <h3 className="font-luxury text-5xl sm:text-6xl md:text-7xl lg:text-[7rem] xl:text-[8rem] leading-[0.85] tracking-[-0.03em] text-white">
+          {step.title}
+        </h3>
+        <p className="font-elegant text-sm sm:text-base md:text-lg lg:text-xl leading-[1.6] text-white/80 mt-5 md:mt-6 lg:mt-8 max-w-[280px] sm:max-w-xs md:max-w-sm lg:max-w-md">
+          {step.subtitle}
+        </p>
+      </motion.div>
+
+      {/* ── Floating Artifact: Optical Compositing & Liquid Inertia (Z-20) ── */}
+      <motion.div
+        className={`absolute right-[5%] md:right-[8%] lg:right-[10%] top-[8%] sm:top-[12%] md:top-[15%] lg:top-[12%] w-[85vw] sm:w-[60vw] md:w-[45vw] lg:w-[32vw] aspect-[4/5] sm:aspect-[1/1] md:aspect-[3/4] z-20 pointer-events-none transform-gpu ${isActive ? 'will-change-transform' : ''}`}
+        style={{
+          z: tunnelZ,
+          rotateX,
+          rotateY,
+          skewY,
+          clipPath: imgClipPath,
+        }}
+      >
+        {/* Micro-border inside the artifact */}
+        <div className="absolute inset-0 rounded-[1.25rem] border border-white/10 z-30 pointer-events-none mix-blend-overlay" />
+
+        {/* 
+          Optical Compositing System 
+          Avoids filter: blur() animation. Renders sharp and pre-blurred images overlaid, fading opacity.
+        */}
+        <div className="w-full h-full rounded-[1.25rem] overflow-hidden bg-[#040810] relative transform-gpu">
+
+          {/* Layer 1: Sharp Image */}
+          <motion.img
+            src={step.image}
+            alt={step.title}
+            className="absolute inset-0 w-full h-full object-cover z-10"
+            style={{
+              scale: internalImgScale,
+              objectPosition: step.imagePosition,
+              filter: 'saturate(1.1) contrast(1.05)',
+              opacity: sharpLayerOpacity,
+            }}
+          />
+
+          {/* Layer 2: Top Pre-blurred layer (Fades in over sharp image during scroll out) */}
+          <motion.img
+            src={step.blurredImage}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover z-20"
+            style={{
+              scale: internalImgScale,
+              objectPosition: step.imagePosition,
+              opacity: blurLayerOpacity,
+              mixBlendMode: 'lighten'
+            }}
+            aria-hidden="true"
+          />
+
+          {/* Static Ambient Base Gradients for occlusion and realistic shadow embedding */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#02050d]/80 via-transparent to-transparent pointer-events-none z-30" />
+          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_85%_75%_at_50%_45%,transparent_0%,rgba(2,5,13,0.30)_100%)] z-30" />
+        </div>
+      </motion.div>
+
+      {/* ── Magnetic Contour UI Intersecting Bottom Left Quadrant (Z-30) ── */}
+      <motion.div
+        className={`absolute bottom-[2%] sm:bottom-[5%] md:bottom-[10%] lg:bottom-[12%] left-[5%] md:left-[35%] lg:left-[45%] xl:left-[50%] z-30 w-[90vw] md:w-[480px] lg:w-[500px] pointer-events-auto transform-gpu ${isActive ? 'will-change-transform' : ''}`}
+        style={{
+          opacity: uiOpacity,
+          y: uiDropY,
+          z: tunnelZ
+        }}
+      >
+        <ObsidianEcosystemCard step={step} />
+      </motion.div>
+
+    </motion.div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MAIN COMPONENT 
+   ═══════════════════════════════════════════════════════════════════════════ */
 const Process = () => {
   const containerRef = useRef<HTMLElement>(null);
 
@@ -673,183 +441,134 @@ const Process = () => {
     offset: ['start start', 'end end'],
   });
 
-  /* Spring-smoothed progress */
+  // Superior smooth engine enforcing 60fps pacing through spring interpolation
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 80,
-    damping: 30,
-    mass: 1,
+    stiffness: 70,
+    damping: 22,
+    mass: 0.8,
   });
 
-  /* Spine metrics */
-  const spineScaleY = useTransform(smoothProgress, [0, 1], [0, 1]);
-  const emitterTop = useTransform(smoothProgress, [0, 1], ['0%', '100%']);
-  const spineOpacity = useTransform(smoothProgress, [0, 0.02], [0, 1]);
+  // Use localized spring for velocity physics mapped in the panels
+  const scrollVel = useVelocity(smoothProgress);
+  const smoothVel = useSpring(scrollVel, { damping: 40, stiffness: 200, mass: 0.5 });
+
+  // Luminous spine timeline parameters
+  const spineScaleY = useTransform(smoothProgress, [0, 0.3], [0, 1]);
+  const emitterTop = useTransform(smoothProgress, [0, 0.3], ['0%', '100%']);
+  const spineOpacity = useTransform(smoothProgress, [0, 0.03], [0, 1]);
+  const glowPulse = useTransform(smoothProgress, [0, 1], [0.35, 1]);
 
   return (
     <section
       ref={containerRef}
       id="proceso-meticuloso"
-      className="relative overflow-hidden bg-transparent"
+      className="relative isolate bg-[#02050d]"
     >
-      {/* ── Noise grain (scoped to section) ── */}
+      {/* Extreme dark aesthetic ambient lighting */}
       <div
-        className="absolute inset-0 pointer-events-none z-[1]"
-        style={{
-          backgroundImage: noiseDataUri,
-          backgroundRepeat: 'repeat',
-          backgroundSize: '200px 200px',
-          opacity: 0.02,
-          mixBlendMode: 'overlay',
-        }}
+        className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_75%_60%_at_50%_50%,rgba(33,67,118,0.1)_0%,rgba(3,10,20,0.85)_58%,rgba(2,6,12,0.98)_100%)] z-0"
         aria-hidden="true"
       />
 
-      {/* ── Section Header — first viewport ── */}
-      <div className="relative h-screen flex items-center justify-center overflow-hidden">
-        {/* Background atmosphere */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: `
-              radial-gradient(ellipse 60% 50% at 50% 45%, hsl(220 60% 12% / 0.4), transparent 65%),
-              radial-gradient(ellipse 40% 40% at 30% 30%, hsl(225 80% 20% / 0.2), transparent 50%)
-            `,
-          }}
-        />
-
-        <div className="text-center relative z-10 px-6">
-          {/* Micro-label */}
+      {/* ── Hero Entry ── */}
+      <header className="relative h-screen flex items-center justify-center overflow-hidden px-6 z-10">
+        <div className="relative z-10 text-center max-w-5xl">
           <motion.span
-            className="inline-block font-mono text-[10px] tracking-[0.45em] uppercase
-                        text-white/20 mb-8"
+            className="inline-block font-mono text-[11px] tracking-[0.48em] uppercase text-white/70 mb-8 will-change-transform"
             initial={{ opacity: 0, letterSpacing: '0.7em' }}
-            whileInView={{ opacity: 1, letterSpacing: '0.45em' }}
+            whileInView={{ opacity: 1, letterSpacing: '0.48em' }}
             viewport={{ once: true }}
-            transition={{ duration: 1.4, delay: 0.1 }}
+            transition={{ duration: 1.1, ease: SILK }}
           >
-            — Metodología —
+            - Metodología -
           </motion.span>
 
-          {/* Enormous serif title */}
           <MaskReveal className="mb-3">
-            <h2
-              className={`font-luxury text-5xl md:text-7xl lg:text-[6rem] xl:text-[7.5rem]
-                          leading-[0.92] tracking-[-0.03em] ${GRADIENT_TEXT}`}
-            >
+            <h2 className="font-luxury text-6xl md:text-8xl lg:text-[7rem] xl:text-[8.5rem] leading-[0.9] tracking-[-0.034em] text-white">
               Proceso
             </h2>
           </MaskReveal>
-          <MaskReveal delay={0.1} className="mb-8">
+          <MaskReveal delay={0.08} className="mb-8">
             <h2
-              className={`font-luxury text-5xl md:text-7xl lg:text-[6rem] xl:text-[7.5rem]
-                          leading-[0.92] tracking-[-0.03em] italic ${GRADIENT_TEXT}`}
+              className="font-luxury text-6xl md:text-8xl lg:text-[7rem] xl:text-[8.5rem] leading-[0.9] tracking-[-0.034em] text-white"
               style={{ fontStyle: 'italic' }}
             >
               Meticuloso
             </h2>
           </MaskReveal>
 
-          {/* Subtitle */}
           <motion.p
-            className={`font-elegant text-base lg:text-lg max-w-xl mx-auto leading-[1.8] ${GRADIENT_TEXT_MUTED}`}
-            variants={subtitleVariants}
-            initial="hidden"
-            whileInView="visible"
+            className="font-elegant text-base md:text-lg lg:text-xl max-w-3xl mx-auto leading-[1.7] text-white/85 will-change-transform"
+            initial={{ opacity: 0, y: 26 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.9, ease: EXPO_OUT, delay: 0.15 }}
           >
-            Cada decisión financiera requiere precisión quirúrgica.
+            Cada decisión financiera exige precisión quirúrgica.
             <br className="hidden sm:block" />
-            Nuestro método garantiza resultados excepcionales.
+            Convertimos complejidad en una ruta clara, medible y elegante.
           </motion.p>
 
-          {/* Decorative line */}
           <motion.div
-            className="w-16 h-px mx-auto mt-10"
+            className="w-24 h-px mx-auto mt-10 will-change-transform"
             style={{
               background:
-                'linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent)',
+                'linear-gradient(to right, transparent, rgba(217,180,107,0.92), rgba(255,255,255,0.35), transparent)',
             }}
             initial={{ scaleX: 0, opacity: 0 }}
             whileInView={{ scaleX: 1, opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.5, duration: 0.8, ease: SILK }}
+            transition={{ delay: 0.4, duration: 0.9, ease: SILK }}
           />
-
-          {/* Scroll indicator */}
-          <motion.div
-            className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.5, duration: 1 }}
-          >
-            <span className="font-mono text-[8px] tracking-[0.4em] uppercase text-white/15">
-              Scroll
-            </span>
-            <motion.div
-              className="w-px h-8 bg-gradient-to-b from-white/20 to-transparent"
-              animate={{ scaleY: [0.5, 1, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-              style={{ transformOrigin: 'top' }}
-            />
-          </motion.div>
         </div>
-      </div>
+      </header>
 
-      {/* ── Timeline spine (desktop only) ── */}
-      <div
-        className="hidden lg:block absolute top-0 bottom-0 left-8 xl:left-12 w-px z-[2] pointer-events-none"
-        aria-hidden="true"
-      >
-        {/* Track */}
-        <div className="absolute inset-0 bg-white/[0.03]" />
+      {/* ── Cinematic Deep Viewport ── */}
+      <div className="relative h-[300vh]">
+        <div className="sticky top-0 h-screen w-full overflow-hidden">
 
-        {/* Laser beam */}
-        <motion.div
-          className="absolute top-0 left-0 w-full origin-top will-change-transform"
-          style={{
-            scaleY: spineScaleY,
-            opacity: spineOpacity,
-            height: '100%',
-            background:
-              'linear-gradient(to bottom, rgba(255,255,255,0.3), rgba(255,255,255,0.1) 50%, transparent)',
-          }}
-        />
+          {/* ── Background Ambiance Deep ── */}
+          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_75%_60%_at_50%_50%,rgba(33,67,118,0.22)_0%,rgba(3,10,20,0.8)_58%,rgba(2,6,12,0.95)_100%)] z-0" />
 
-        {/* Emitter dot */}
-        <motion.div
-          className="absolute left-1/2 -translate-x-1/2 will-change-transform"
-          style={{ top: emitterTop }}
-        >
-          <div className="w-1.5 h-1.5 rounded-full bg-white/60 relative">
-            <div className="absolute -inset-1 rounded-full bg-white/30 blur-[3px]" />
-            <div className="absolute -inset-3 rounded-full bg-white/10 blur-md" />
+          {/* ── Left Luminous Spine ── */}
+          <div
+            className="hidden lg:block absolute top-0 bottom-0 left-7 xl:left-12 w-[2px] z-50 pointer-events-none mix-blend-screen"
+            aria-hidden="true"
+          >
+            <div className="absolute inset-0 bg-white/10" />
+            <motion.div
+              className="absolute top-0 left-0 h-full w-full origin-top will-change-transform"
+              style={{
+                scaleY: spineScaleY,
+                opacity: spineOpacity,
+                background: 'linear-gradient(to bottom, rgba(217,180,107,0.95), rgba(255,255,255,0.82) 42%, rgba(255,255,255,0.2) 75%, transparent)',
+              }}
+            />
+            <motion.div
+              className="absolute left-1/2 -translate-x-1/2 will-change-transform"
+              style={{ top: emitterTop, opacity: spineOpacity }}
+            >
+              <motion.div className="relative will-change-transform" style={{ opacity: glowPulse }}>
+                <div className="w-2 h-2 rounded-full bg-white border border-[#d9b46b]/85" />
+                <div className="absolute -inset-1.5 rounded-full bg-white/70 blur-[5px]" />
+                <div className="absolute -inset-4 rounded-full bg-[#d9b46b]/50 blur-md" />
+              </motion.div>
+            </motion.div>
           </div>
-        </motion.div>
-      </div>
 
-      {/* ── Scrollytelling panels ── */}
-      <div className="relative">
-        {steps.map((step, index) => (
-          <ProcessPanel
-            key={step.number}
-            step={step}
-            index={index}
-            totalSteps={steps.length}
-            scrollProgress={smoothProgress}
-          />
-        ))}
-      </div>
+          {/* ── Sequence Panels (Spatial Composition) ── */}
+          {steps.map((step, index) => (
+            <SpatialPanel
+              key={step.number}
+              step={step}
+              index={index}
+              totalSteps={steps.length}
+              scrollProgress={smoothProgress}
+              smoothVel={smoothVel}
+            />
+          ))}
 
-      {/* Terminal mark */}
-      <div className="relative h-32 flex items-center justify-center">
-        <motion.div
-          className="w-1.5 h-1.5 rounded-full bg-white/10 border border-white/[0.06]"
-          initial={{ scale: 0 }}
-          whileInView={{ scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4, type: 'spring', stiffness: 300 }}
-          aria-hidden="true"
-        />
+        </div>
       </div>
     </section>
   );

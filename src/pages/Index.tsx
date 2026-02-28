@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
+import ManifestoSection from '@/components/ManifestoSection';
 import AboutAmanda from '@/components/AboutAmanda';
 import Services from '@/components/Services';
 import TrustBanner from '@/components/TrustBanner';
 import KPIs from '@/components/KPIs';
 import Process from '@/components/Process';
-import Awards from '@/components/Awards';
 import Testimonials from '@/components/Testimonials';
 import FAQ from '@/components/FAQ';
 import ContactForm from '@/components/ContactForm';
@@ -71,6 +71,7 @@ const Index = () => {
         <Header />
         <main>
           <Hero />
+          <ManifestoSection />
           <AboutAmanda />
           <Services />
           <section id="trust-section" className="py-16">
@@ -80,7 +81,6 @@ const Index = () => {
           </section>
           <KPIs />
           <Process />
-          <Awards />
           <GlobalFinancesCard />
           <Testimonials />
           <FAQ />
