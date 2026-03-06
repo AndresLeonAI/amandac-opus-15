@@ -133,7 +133,7 @@ export default function LuxuryDollarLoader({
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
         <svg
           viewBox="0 0 1000 800"
-          className="w-[120vw] md:w-[80vw] max-w-6xl opacity-15 stroke-white"
+          className="w-[120%] md:w-[80%] max-w-none md:max-w-6xl opacity-15 stroke-white"
           fill="none"
         >
           {/* Grid Lines (Subtle Context) */}

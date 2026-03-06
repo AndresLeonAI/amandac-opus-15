@@ -239,7 +239,7 @@ const GlobeCanvas = () => {
   const DPR = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 2;
   // Make CSS size responsive to window width
   const CSS = typeof window !== 'undefined' && window.innerWidth < 768 ? 400 : 760;
-  return <canvas ref={canvasRef} width={CSS * DPR} height={CSS * DPR} aria-hidden="true" className="will-change-transform max-w-[120vw] md:max-w-full" style={{ width: `${CSS}px`, height: `${CSS}px`, background: 'transparent' }} />;
+  return <canvas ref={canvasRef} width={CSS * DPR} height={CSS * DPR} aria-hidden="true" className="will-change-transform w-[120%] md:w-full scale-105 md:scale-100 max-w-none origin-center" style={{ aspectRatio: '1/1', background: 'transparent' }} />;
 };
 
 /* ─── orbital rings (neon upgraded) ───────────────────── */
@@ -562,7 +562,7 @@ const GlobalFinancesCard = () => {
     <section id="finanzas-divisa" ref={sectionRef} className="relative" style={{ height: '550vh' }}
       aria-label="Finanzas globales — El Compás del Capital Global">
 
-      <div className="sticky top-0 h-screen w-full overflow-hidden" style={{ background: '#020408' }}>
+      <div className="sticky top-0 h-[100dvh] w-full overflow-hidden" style={{ background: '#020408' }}>
 
         {/* noise */}
         <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true"

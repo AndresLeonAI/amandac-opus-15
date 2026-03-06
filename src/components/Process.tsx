@@ -2,7 +2,6 @@ import { useRef, useState, useEffect, type MouseEvent } from 'react';
 import { Search, Target, Users, type LucideIcon } from 'lucide-react';
 import {
   motion,
-  useScroll,
   useSpring,
   useTransform,
   useVelocity,
@@ -12,6 +11,10 @@ import {
   type MotionValue,
 } from 'framer-motion';
 import { MagneticCTA } from '@/components/ui/MagneticCTA';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 /* ═══════════════════════════════════════════════════════════════════════════
    EASINGS 
@@ -364,7 +367,7 @@ const SpatialPanel = ({ step, index, totalSteps, scrollProgress, smoothVel }: { 
 
       {/* ── Floating Artifact: Optical Compositing & Liquid Inertia (Z-20) ── */}
       <motion.div
-        className={`absolute right-[5%] md:right-[8%] lg:right-[10%] top-[8%] sm:top-[12%] md:top-[15%] lg:top-[12%] w-[85vw] sm:w-[60vw] md:w-[45vw] lg:w-[32vw] aspect-[4/5] sm:aspect-[1/1] md:aspect-[3/4] z-20 pointer-events-none transform-gpu ${isActive ? 'will-change-transform' : ''}`}
+        className={`absolute right-[5%] md:right-[8%] lg:right-[10%] top-[8%] sm:top-[12%] md:top-[15%] lg:top-[12%] w-[85%] sm:w-[60%] md:w-[45%] lg:w-[32%] max-w-none aspect-[4/5] sm:aspect-[1/1] md:aspect-[3/4] z-20 pointer-events-none transform-gpu ${isActive ? 'will-change-transform' : ''}`}
         style={{
           z: tunnelZ,
           rotateX,
@@ -417,7 +420,7 @@ const SpatialPanel = ({ step, index, totalSteps, scrollProgress, smoothVel }: { 
 
       {/* ── Magnetic Contour UI Intersecting Bottom Left Quadrant (Z-30) ── */}
       <motion.div
-        className={`absolute bottom-[2%] sm:bottom-[5%] md:bottom-[10%] lg:bottom-[12%] left-[5%] md:left-[35%] lg:left-[45%] xl:left-[50%] z-30 w-[90vw] md:w-[480px] lg:w-[500px] pointer-events-auto transform-gpu ${isActive ? 'will-change-transform' : ''}`}
+        className={`absolute bottom-[2%] sm:bottom-[5%] md:bottom-[10%] lg:bottom-[12%] left-[5%] md:left-[35%] lg:left-[45%] xl:left-[50%] z-30 w-[90%] md:w-[480px] lg:w-[500px] pointer-events-auto transform-gpu ${isActive ? 'will-change-transform' : ''}`}
         style={{
           opacity: uiOpacity,
           y: uiDropY,
@@ -437,10 +440,20 @@ const SpatialPanel = ({ step, index, totalSteps, scrollProgress, smoothVel }: { 
 const Process = () => {
   const containerRef = useRef<HTMLElement>(null);
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end end'],
-  });
+  const scrollYProgress = useMotionValue(0);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const ctx = gsap.context(() => {
+      ScrollTrigger.create({
+        trigger: containerRef.current,
+        start: 'start start',
+        end: 'end end',
+        onUpdate: (self) => scrollYProgress.set(self.progress),
+      });
+    });
+    return () => ctx.revert();
+  }, [scrollYProgress]);
 
   // Superior smooth engine enforcing 60fps pacing through spring interpolation
   const smoothProgress = useSpring(scrollYProgress, {
@@ -472,7 +485,7 @@ const Process = () => {
       />
 
       {/* ── Hero Entry ── */}
-      <header className="relative h-screen min-h-[800px] flex flex-col items-center justify-center overflow-hidden px-6 z-10">
+      <header className="relative h-[100dvh] min-h-[800px] flex flex-col items-center justify-center overflow-hidden px-6 z-10">
         <div className="relative z-10 text-center max-w-5xl flex flex-col items-center">
           <motion.span
             className="inline-block font-mono text-[11px] tracking-[0.48em] uppercase text-white/70 mb-8 will-change-transform"
@@ -529,7 +542,7 @@ const Process = () => {
 
       {/* ── Cinematic Deep Viewport ── */}
       <div className="relative h-[300vh]">
-        <div className="sticky top-0 h-screen w-full overflow-hidden">
+        <div className="sticky top-0 h-[100dvh] w-full overflow-hidden">
 
           {/* ── Background Ambiance Deep ── */}
           <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_75%_60%_at_50%_50%,rgba(33,67,118,0.22)_0%,rgba(3,10,20,0.8)_58%,rgba(2,6,12,0.95)_100%)] z-0" />
@@ -580,8 +593,8 @@ const Process = () => {
         {/* Línea de luz límite superior */}
         <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-        {/* Glow subyacente sutil */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] max-w-lg aspect-square rounded-full pointer-events-none mix-blend-screen opacity-10 blur-[80px]" style={{ background: 'radial-gradient(circle, #D9B46B 0%, transparent 60%)' }} />
+        {/* Glow subyacente sutil - Reservado a pantallas grandes por GPU cost */}
+        <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] max-w-lg aspect-square rounded-full pointer-events-none mix-blend-screen opacity-10 blur-[80px]" style={{ background: 'radial-gradient(circle, #D9B46B 0%, transparent 60%)' }} />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}

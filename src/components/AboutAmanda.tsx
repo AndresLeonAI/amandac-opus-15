@@ -9,7 +9,11 @@ import {
   animate,
   type MotionValue,
 } from 'framer-motion';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MagneticCTA } from '@/components/ui/MagneticCTA';
+
+gsap.registerPlugin(ScrollTrigger);
 
 /* ═══════════════════════════════════════════════
    Constants
@@ -244,11 +248,13 @@ const NarrativeBlock = ({
   progress,
   rangeStart,
   rangeEnd,
+  isDesktop,
 }: {
   section: (typeof SECTIONS)[number];
   progress: MotionValue<number>;
   rangeStart: number;
   rangeEnd: number;
+  isDesktop: boolean;
 }) => {
   const opacity = useTransform(
     progress,
@@ -285,7 +291,11 @@ const NarrativeBlock = ({
 
   return (
     <motion.div
-      style={{ opacity, scale, x: translateX }}
+      style={isDesktop ? { opacity, scale, x: translateX } : undefined}
+      initial={!isDesktop ? { opacity: 0, y: 30 } : undefined}
+      whileInView={!isDesktop ? { opacity: 1, y: 0 } : undefined}
+      viewport={{ once: true, margin: '-10%' }}
+      transition={{ duration: 0.8, ease: SILK }}
       className="py-10 md:py-16 will-change-transform"
     >
       {/* Stat counter */}
@@ -377,10 +387,20 @@ const AboutAmanda = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end end'],
-  });
+  const scrollYProgress = useMotionValue(0);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const ctx = gsap.context(() => {
+      ScrollTrigger.create({
+        trigger: containerRef.current,
+        start: 'start start',
+        end: 'end end',
+        onUpdate: (self) => scrollYProgress.set(self.progress),
+      });
+    });
+    return () => ctx.revert();
+  }, [scrollYProgress]);
 
   /* Progress line fill — direct bind */
   const progressHeight = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
@@ -409,8 +429,7 @@ const AboutAmanda = () => {
     <section
       id="about"
       ref={containerRef}
-      className="relative"
-      style={{ minHeight: '300vh' }}
+      className="relative lg:min-h-[300vh]"
     >
       {/* ── Layer 1: Radial depth background ── */}
       <div
@@ -421,18 +440,6 @@ const AboutAmanda = () => {
             radial-gradient(ellipse 50% 50% at 20% 80%, hsl(220 80% 40% / 0.05), transparent 60%),
             radial-gradient(ellipse 40% 40% at 50% 20%, hsl(210 60% 30% / 0.03), transparent 50%)
           `,
-        }}
-      />
-
-      {/* ── Layer 2: Noise overlay ── */}
-      <div
-        className="absolute inset-0 pointer-events-none z-50"
-        style={{
-          backgroundImage: noiseDataUri,
-          backgroundRepeat: 'repeat',
-          backgroundSize: '200px 200px',
-          mixBlendMode: 'overlay',
-          opacity: 0.04,
         }}
       />
 
@@ -510,6 +517,7 @@ const AboutAmanda = () => {
                   progress={scrollYProgress}
                   rangeStart={sectionRanges[i].start}
                   rangeEnd={sectionRanges[i].end}
+                  isDesktop={isDesktop}
                 />
               ))}
 
@@ -578,24 +586,26 @@ const AboutAmanda = () => {
                 </motion.div>
               </motion.div>
 
-              {/* ── Breathing volumetric glow ── */}
-              <motion.div
-                className="absolute inset-0 -z-10 rounded-2xl"
-                animate={{
-                  scale: [1, 1.15, 1],
-                  opacity: [0.25, 0.45, 0.25],
-                }}
-                transition={{
-                  duration: 6,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-                style={{
-                  background:
-                    'radial-gradient(ellipse 70% 60% at 50% 35%, hsl(220 100% 55% / 0.2), transparent 70%)',
-                  filter: 'blur(40px)',
-                }}
-              />
+              {/* ── Breathing volumetric glow (Desktop Only to save mobile GPU) ── */}
+              {isDesktop && (
+                <motion.div
+                  className="absolute inset-0 -z-10 rounded-2xl"
+                  animate={{
+                    scale: [1, 1.15, 1],
+                    opacity: [0.25, 0.45, 0.25],
+                  }}
+                  transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                  style={{
+                    background:
+                      'radial-gradient(ellipse 70% 60% at 50% 35%, hsl(220 100% 55% / 0.2), transparent 70%)',
+                    filter: 'blur(40px)',
+                  }}
+                />
+              )}
 
               {/* Secondary warm accent glow */}
               <motion.div

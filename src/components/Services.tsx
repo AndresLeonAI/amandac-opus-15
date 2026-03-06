@@ -18,7 +18,7 @@ const FontStyles = () => (
       margin: 0;
       font-family: var(--font-sans);
       overflow-x: hidden;
-      width: 100vw;
+      width: 100%;
       cursor: none; 
     }
     
@@ -387,7 +387,7 @@ const Services = () => {
       />
 
       {/* Sticky Viewport */}
-      <div className="sticky top-0 h-[100vh] w-full overflow-hidden bg-[#050505]">
+      <div className="sticky top-0 h-[100dvh] w-full overflow-hidden bg-[#050505]">
 
         {/* Background Atmosphere */}
         <motion.div

@@ -7,20 +7,7 @@ import { useScrollToBooking } from '@/hooks/useScrollToBooking';
    1. UTILITY COMPONENTS (Splits, Cursors)
    ========================================== */
 
-/**
- * Cinematographic Noise Background
- * Scoped to the ManifestoSection via absolute positioning
- */
-const NoiseOverlay: React.FC = () => (
-    <div className="pointer-events-none absolute inset-0 z-50 h-full w-full opacity-[0.03] mix-blend-overlay">
-        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="h-full w-full">
-            <filter id="manifesto-noiseFilter">
-                <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves={3} stitchTiles="stitch" />
-            </filter>
-            <rect width="100%" height="100%" filter="url(#manifesto-noiseFilter)" />
-        </svg>
-    </div>
-);
+
 
 /**
  * Custom Smooth Cursor
@@ -506,7 +493,7 @@ export default function ManifestoSection() {
 
     if (!gsapLoaded || !stLoaded) {
         return (
-            <div className="h-screen w-full bg-[#030303] flex items-center justify-center">
+            <div className="min-h-[100dvh] w-full bg-[#030303] flex items-center justify-center">
                 <Loader2 className="animate-spin w-8 h-8 text-red-600" />
             </div>
         );
@@ -519,7 +506,6 @@ export default function ManifestoSection() {
             style={{ fontFamily: "'Inter', sans-serif" }}
         >
             <CustomCursor />
-            <NoiseOverlay />
 
             <style>{`
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@200;300;400;600&display=swap');
@@ -555,7 +541,7 @@ export default function ManifestoSection() {
             </svg>
 
             {/* Section: Horizontal Track */}
-            <section ref={containerRef} className="h-screen w-full relative overflow-hidden bg-[#030303]">
+            <section ref={containerRef} className="h-[100dvh] w-full relative overflow-hidden bg-[#030303]">
                 {/* Cinematic Video Background */}
                 <video
                     autoPlay
@@ -622,9 +608,12 @@ export default function ManifestoSection() {
 
                     {/* Segment 4: Libertad — Typographic Climax */}
                     <div className="flex items-center shrink-0 h-full relative pl-10 md:pl-32 pr-[10vw] md:pr-[15vw]">
-                        {/* Atmospheric glow */}
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] md:w-[80vw] h-[120vw] md:h-[80vw] bg-red-600/[0.06] blur-[100px] md:blur-[180px] rounded-full pointer-events-none"></div>
-                        <div className="absolute top-1/2 left-[60%] -translate-x-1/2 -translate-y-1/2 w-[80vw] md:w-[40vw] h-[80vw] md:h-[40vw] bg-white/[0.02] blur-[80px] md:blur-[100px] rounded-full pointer-events-none"></div>
+                        {/* Atmospheric glow - Optimized for Mobile GPU */}
+                        <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-red-600/[0.06] blur-[180px] rounded-full pointer-events-none"></div>
+                        <div className="hidden md:block absolute top-1/2 left-[60%] -translate-x-1/2 -translate-y-1/2 w-[40vw] h-[40vw] bg-white/[0.02] blur-[100px] rounded-full pointer-events-none"></div>
+
+                        {/* Mobile lightweight alternative */}
+                        <div className="md:hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120vw] bg-[radial-gradient(circle,rgba(220,38,38,0.06)_0%,transparent_70%)] pointer-events-none"></div>
 
                         <div className="flex flex-col relative z-10">
                             {/* Tracking label */}
