@@ -11,6 +11,7 @@ import {
   cubicBezier,
   type MotionValue,
 } from 'framer-motion';
+import { MagneticCTA } from '@/components/ui/MagneticCTA';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    EASINGS 
@@ -101,7 +102,7 @@ const MaskReveal = ({ children, className = '', delay = 0 }: { children: React.R
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: '-12%' }}
-      className="will-change-transform"
+      className="will-change-transform block"
     >
       {children}
     </motion.div>
@@ -471,8 +472,8 @@ const Process = () => {
       />
 
       {/* ── Hero Entry ── */}
-      <header className="relative h-screen flex items-center justify-center overflow-hidden px-6 z-10">
-        <div className="relative z-10 text-center max-w-5xl">
+      <header className="relative h-screen min-h-[800px] flex flex-col items-center justify-center overflow-hidden px-6 z-10">
+        <div className="relative z-10 text-center max-w-5xl flex flex-col items-center">
           <motion.span
             className="inline-block font-mono text-[11px] tracking-[0.48em] uppercase text-white/70 mb-8 will-change-transform"
             initial={{ opacity: 0, letterSpacing: '0.7em' }}
@@ -483,19 +484,22 @@ const Process = () => {
             - Metodología -
           </motion.span>
 
-          <MaskReveal className="mb-3">
-            <h2 className="font-luxury text-6xl md:text-8xl lg:text-[7rem] xl:text-[8.5rem] leading-[0.9] tracking-[-0.034em] text-white">
-              Proceso
-            </h2>
-          </MaskReveal>
-          <MaskReveal delay={0.08} className="mb-8">
-            <h2
-              className="font-luxury text-6xl md:text-8xl lg:text-[7rem] xl:text-[8.5rem] leading-[0.9] tracking-[-0.034em] text-white"
-              style={{ fontStyle: 'italic' }}
-            >
-              Meticuloso
-            </h2>
-          </MaskReveal>
+          <div className="flex flex-col items-center space-y-2 md:space-y-4">
+            <MaskReveal>
+              <h2 className="font-luxury text-6xl md:text-8xl lg:text-[7rem] xl:text-[8.5rem] leading-[0.9] tracking-[-0.034em] text-white">
+                Proceso
+              </h2>
+            </MaskReveal>
+            <MaskReveal delay={0.08}>
+              <h2
+                className="font-luxury text-6xl md:text-8xl lg:text-[7rem] xl:text-[8.5rem] leading-[0.9] tracking-[-0.034em] text-white"
+                style={{ fontStyle: 'italic' }}
+              >
+                Meticuloso
+              </h2>
+            </MaskReveal>
+          </div>
+
 
           <motion.p
             className="font-elegant text-base md:text-lg lg:text-xl max-w-3xl mx-auto leading-[1.7] text-white/85 will-change-transform"
@@ -569,6 +573,24 @@ const Process = () => {
           ))}
 
         </div>
+      </div>
+
+      {/* ── Magnetic CTA (Cierre) ── */}
+      <div className="relative h-[45vh] flex flex-col items-center justify-center bg-[#02050d] z-20 overflow-hidden">
+        {/* Línea de luz límite superior */}
+        <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+        {/* Glow subyacente sutil */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] max-w-lg aspect-square rounded-full pointer-events-none mix-blend-screen opacity-10 blur-[80px]" style={{ background: 'radial-gradient(circle, #D9B46B 0%, transparent 60%)' }} />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, margin: "0px" }}
+          transition={{ duration: 1.4, ease: EXPO_OUT }}
+        >
+          <MagneticCTA text="Diagnóstico Inicial" />
+        </motion.div>
       </div>
     </section>
   );

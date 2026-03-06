@@ -4,6 +4,7 @@ import {
   useMotionTemplate, animate, useInView, type MotionValue,
 } from 'framer-motion';
 import createGlobe from 'cobe';
+import { useScrollToBooking } from '@/hooks/useScrollToBooking';
 
 /* ─── constants ─────────────────────────────────────────── */
 const EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -74,32 +75,36 @@ const CharEyebrow = ({ text, isActive, color }: { text: string; isActive: boolea
   <motion.div className="flex flex-wrap text-[10px] uppercase tracking-[0.45em] font-sans font-semibold mb-5"
     variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.018 } } }}
     initial="hidden" animate={isActive ? 'visible' : 'hidden'} aria-label={text}>
-    {text.split('').map((ch, i) => (
-      <motion.span key={i} style={{ color, display: 'inline-block' }}
-        variants={{ hidden: { y: '100%', opacity: 0 }, visible: { y: '0%', opacity: 1, transition: { duration: 0.3, ease: EXPO } } }}>
-        {ch === ' ' ? '\u00A0' : ch}
-      </motion.span>
-    ))}
+    <span aria-hidden="true" className="flex flex-wrap">
+      {text.split('').map((ch, i) => (
+        <motion.span key={i} style={{ color, display: 'inline-block' }}
+          variants={{ hidden: { y: '100%', opacity: 0 }, visible: { y: '0%', opacity: 1, transition: { duration: 0.3, ease: EXPO } } }}>
+          {ch === ' ' ? '\u00A0' : ch}
+        </motion.span>
+      ))}
+    </span>
   </motion.div>
 );
 
 /* ─── word-stagger title ────────────────────────────────── */
 const WordTitle = ({ lines, isActive }: { lines: string[]; isActive: boolean }) => (
-  <h2 className="font-serif italic text-white mb-5 leading-[0.90] tracking-tight" style={{ fontSize: 'clamp(2.8rem, 5vw, 5.4rem)' }}>
-    {lines.map((line, li) => (
-      <div key={li} className="block">
-        {line.split(' ').map((word, wi) => (
-          <span key={wi} className="inline-block overflow-hidden mr-[0.25em] pr-4 pb-2 -mr-4 -mb-2">
-            <motion.span className="inline-block"
-              variants={{ hidden: { y: '110%', opacity: 0, rotate: 2 }, visible: { y: '0%', opacity: 1, rotate: 0 } }}
-              initial="hidden" animate={isActive ? 'visible' : 'hidden'}
-              transition={{ duration: 0.72, ease: EXPO, delay: li * 0.14 + wi * 0.07 }}>
-              {word}
-            </motion.span>
-          </span>
-        ))}
-      </div>
-    ))}
+  <h2 className="font-serif italic text-white mb-5 leading-[0.90] tracking-tight" style={{ fontSize: 'clamp(2.8rem, 5vw, 5.4rem)' }} aria-label={lines.join(' ')}>
+    <span aria-hidden="true">
+      {lines.map((line, li) => (
+        <span key={li} className="block">
+          {line.split(' ').map((word, wi) => (
+            <span key={wi} className="inline-block overflow-hidden mr-[0.25em] pr-4 pb-2 -mr-4 -mb-2">
+              <motion.span className="inline-block"
+                variants={{ hidden: { y: '110%', opacity: 0, rotate: 2 }, visible: { y: '0%', opacity: 1, rotate: 0 } }}
+                initial="hidden" animate={isActive ? 'visible' : 'hidden'}
+                transition={{ duration: 0.72, ease: EXPO, delay: li * 0.14 + wi * 0.07 }}>
+                {word}
+              </motion.span>
+            </span>
+          ))}
+        </span>
+      ))}
+    </span>
   </h2>
 );
 
@@ -202,6 +207,10 @@ const GlobeCanvas = () => {
   useEffect(() => { window.addEventListener('mousemove', onMouse, { passive: true }); return () => window.removeEventListener('mousemove', onMouse); }, [onMouse]);
   useEffect(() => {
     if (!canvasRef.current) return;
+    let isVisible = true;
+    const observer = new IntersectionObserver(([entry]) => { isVisible = entry.isIntersecting; }, { threshold: 0 });
+    observer.observe(canvasRef.current);
+
     const DPR = Math.min(window.devicePixelRatio || 1, 2); const CSS = 760;
     globeRef.current = createGlobe(canvasRef.current, {
       devicePixelRatio: DPR, width: CSS * DPR, height: CSS * DPR,
@@ -217,13 +226,20 @@ const GlobeCanvas = () => {
         { location: [1.3521, 103.8198], size: 0.055 }, { location: [48.8566, 2.3522], size: 0.055 },
         { location: [-34.6037, -58.3816], size: 0.065 }, { location: [-23.5505, -46.6333], size: 0.058 },
       ],
-      onRender: (state) => { phiRef.current += 0.0014; state.phi = phiRef.current + mouseRef.current.dx; state.theta = 0.12 + mouseRef.current.dy; },
+      onRender: (state) => {
+        if (!isVisible) return; // Viewport Culling!
+        phiRef.current += 0.0014;
+        state.phi = phiRef.current + mouseRef.current.dx;
+        state.theta = 0.12 + mouseRef.current.dy;
+      },
     });
-    return () => { globeRef.current?.destroy(); };
+    return () => { observer.disconnect(); globeRef.current?.destroy(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const DPR = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 2; const CSS = 760;
-  return <canvas ref={canvasRef} width={CSS * DPR} height={CSS * DPR} aria-hidden="true" className="will-change-transform" style={{ width: `${CSS}px`, height: `${CSS}px`, maxWidth: '100%', background: 'transparent' }} />;
+  const DPR = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 2;
+  // Make CSS size responsive to window width
+  const CSS = typeof window !== 'undefined' && window.innerWidth < 768 ? 400 : 760;
+  return <canvas ref={canvasRef} width={CSS * DPR} height={CSS * DPR} aria-hidden="true" className="will-change-transform max-w-[120vw] md:max-w-full" style={{ width: `${CSS}px`, height: `${CSS}px`, background: 'transparent' }} />;
 };
 
 /* ─── orbital rings (neon upgraded) ───────────────────── */
@@ -273,7 +289,7 @@ const CurrencyParticles = () => (
 const AccentGlowLayer = ({ progress, range, rgb }: { progress: MotionValue<number>; range: readonly [number, number, number, number]; rgb: string }) => {
   const op = useSpring(useTransform(progress, [...range], [0, 0.09, 0.09, 0]), { stiffness: 35, damping: 18 });
   return <motion.div className="pointer-events-none absolute inset-y-0 left-0 z-0" aria-hidden="true"
-    style={{ opacity: op, width: '46%', background: `radial-gradient(ellipse 80% 60% at 20% 50%, rgba(${rgb},1), transparent 70%)` }} />;
+    style={{ opacity: op, width: '46%', background: `radial - gradient(ellipse 80 % 60 % at 20 % 50 %, rgba(${rgb}, 1), transparent 70 %)` }} />;
 };
 
 /* ─── background editorial image ──────────────────────── */
@@ -325,7 +341,7 @@ const ChapterPanel = ({ data, progress, rng }: { data: ChapterData; progress: Mo
 
   return (
     <motion.div style={{ opacity: op, x, filter: blurFilter }}
-      className="absolute inset-y-0 left-0 w-full flex flex-col justify-center pl-8 md:pl-16 lg:pl-20 pr-6 pointer-events-none">
+      className="absolute inset-y-0 left-0 w-full flex flex-col justify-center pl-6 md:pl-16 lg:pl-20 pr-6 pointer-events-none mt-10 md:mt-0">
       {/* ghost chapter number */}
       <motion.div aria-hidden="true" animate={{ opacity: active ? 0.04 : 0 }} transition={{ duration: 0.8 }}
         className="absolute right-0 bottom-0 pointer-events-none select-none z-0 font-serif italic text-white"
@@ -356,8 +372,8 @@ const ChapterPanel = ({ data, progress, rng }: { data: ChapterData; progress: Mo
         </motion.div>
       )}
       {/* body — scroll-opacity wipe */}
-      <motion.p className="font-sans font-light text-white leading-relaxed mb-7"
-        style={{ fontSize: 'clamp(0.82rem, 1.1vw, 0.95rem)', maxWidth: '40ch', opacity: bodyOp }}>
+      <motion.p className="font-sans font-light text-white leading-relaxed mb-4 md:mb-7"
+        style={{ fontSize: 'clamp(0.75rem, 1.1vw, 0.95rem)', maxWidth: '40ch', opacity: bodyOp }}>
         {data.body}
       </motion.p>
       {/* accent rule draw */}
@@ -385,6 +401,7 @@ const GrandFinale = ({ progress }: { progress: MotionValue<number> }) => {
   }, [progress]);
 
   const words = ['Comienza', 'tu', 'camino', 'hoy'];
+  const scrollToBooking = useScrollToBooking();
 
   return (
     <motion.div style={{ opacity: op }} className="absolute inset-0 z-50 pointer-events-none flex flex-col items-center justify-center overflow-hidden">
@@ -394,8 +411,8 @@ const GrandFinale = ({ progress }: { progress: MotionValue<number> }) => {
       <motion.div style={{ scale, y, filter: useMotionTemplate`blur(${blurPx}px)` }} className="relative z-10 flex flex-col items-center text-center px-4">
 
         {/* massive typography split text */}
-        <h2 className="font-serif italic text-white leading-[0.9] tracking-tight mb-8 flex flex-col items-center" style={{ fontSize: 'clamp(3.5rem, 8vw, 8rem)' }}>
-          <span className="flex items-center gap-[0.25em]">
+        <h2 className="font-serif italic text-white leading-[0.9] tracking-tight mb-8 flex flex-col items-center" style={{ fontSize: 'clamp(3.5rem, 8vw, 8rem)' }} aria-label="Comienza tu camino hoy">
+          <span className="flex items-center gap-[0.25em]" aria-hidden="true">
             {words.slice(0, 3).map((word, i) => (
               <span key={i} className="inline-block overflow-hidden pr-4 pb-2 -mr-4 -mb-2">
                 <motion.span className="inline-block origin-bottom"
@@ -407,7 +424,7 @@ const GrandFinale = ({ progress }: { progress: MotionValue<number> }) => {
               </span>
             ))}
           </span>
-          <span className="flex justify-center mt-2">
+          <span className="flex justify-center mt-2" aria-hidden="true">
             <span className="inline-block overflow-hidden pr-4 pb-2 -mr-4 -mb-2">
               <motion.span className="inline-block origin-bottom"
                 variants={{ hidden: { y: '110%', opacity: 0, scale: 0.9, rotateX: 45 }, visible: { y: '0%', opacity: 1, scale: 1, rotateX: 0 } }}
@@ -429,7 +446,8 @@ const GrandFinale = ({ progress }: { progress: MotionValue<number> }) => {
 
         {/* grand oval CTA */}
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={active ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }} transition={{ type: 'spring', stiffness: 60, damping: 15, delay: 0.8 }} className="pointer-events-auto">
-          <motion.a href="https://wa.me/573114688067?text=Hola%20Amanda,%20me%20gustaría%20agendar%20una%20sesión%20para%20planificar%20mis%20finanzas%20internacionales." target="_blank" rel="noopener noreferrer"
+          <motion.button
+            onClick={scrollToBooking}
             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
             className="group relative flex items-center gap-6 rounded-[2rem] overflow-hidden"
             style={{ padding: '20px 48px', background: 'rgba(2,4,8,0.4)', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -466,7 +484,7 @@ const GrandFinale = ({ progress }: { progress: MotionValue<number> }) => {
                 <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
               </motion.svg>
             </div>
-          </motion.a>
+          </motion.button>
         </motion.div>
       </motion.div>
     </motion.div>
@@ -566,10 +584,10 @@ const GlobalFinancesCard = () => {
         ))}
 
         {/* ── two-column grid ── */}
-        <div className="relative z-10 h-full w-full grid grid-cols-1 md:grid-cols-[45%_55%]">
+        <div className="relative z-10 h-full w-full flex flex-col md:grid md:grid-cols-[45%_55%]">
 
           {/* LEFT: text */}
-          <div className="relative h-full overflow-hidden">
+          <div className="relative h-[40%] md:h-full overflow-hidden shrink-0 mt-20 md:mt-0">
             <SectionHeader progress={smooth} />
 
             <motion.div style={{ opacity: globalsOp }}>
@@ -583,7 +601,7 @@ const GlobalFinancesCard = () => {
           </div>
 
           {/* RIGHT: globe */}
-          <motion.div style={{ opacity: globalsOp }} className="relative h-full flex items-center justify-center overflow-visible">
+          <motion.div style={{ opacity: globalsOp }} className="relative h-[60%] md:h-full flex items-center justify-center overflow-visible">
 
             {/* ambient glow */}
             <motion.div aria-hidden="true" style={{ opacity: glowOp }}

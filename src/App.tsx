@@ -10,34 +10,40 @@ import BlogPost from "./pages/BlogPost";
 import Awards from "./pages/Awards";
 import AwardDetail from "./pages/AwardDetail";
 import NotFound from "./pages/NotFound";
+import ScrollOrchestrator from "./components/ScrollOrchestrator";
+import { SmoothScroll } from './components/ui/SmoothScroll';
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <HelmetProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-    <HashRouter>
-      <Routes>
-        <Route path="/" element={<Index />} />
+  <SmoothScroll>
+    <QueryClientProvider client={queryClient}>
+      <HelmetProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <HashRouter>
+            <ScrollOrchestrator>
+              <Routes>
+                <Route path="/" element={<Index />} />
 
-        {/* Blog routes */}
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/blog/:slug" element={<BlogPost />} />
+                {/* Blog routes */}
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogPost />} />
 
-        {/* Awards routes */}
-        <Route path="/premios" element={<Awards />} />
-        <Route path="/premios/:slug" element={<AwardDetail />} />
+                {/* Awards routes */}
+                <Route path="/premios" element={<Awards />} />
+                <Route path="/premios/:slug" element={<AwardDetail />} />
 
-        {/* Catch-all → home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </HashRouter>
-      </TooltipProvider>
-    </HelmetProvider>
-  </QueryClientProvider>
+                {/* Catch-all → home */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </ScrollOrchestrator>
+          </HashRouter>
+        </TooltipProvider>
+      </HelmetProvider>
+    </QueryClientProvider>
+  </SmoothScroll>
 );
 
 export default App;

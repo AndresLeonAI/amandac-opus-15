@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useLayoutEffect, useCallback } from 'react';
 import { motion, useAnimation, useInView } from 'framer-motion';
 import { ArrowUpRight, Search, Target, Users, Loader2 } from 'lucide-react';
+import { useScrollToBooking } from '@/hooks/useScrollToBooking';
 
 /* ==========================================
    1. UTILITY COMPONENTS (Splits, Cursors)
@@ -55,15 +56,16 @@ interface SplitTextProps {
     children: React.ReactNode;
     className?: string;
     delay?: number;
+    style?: React.CSSProperties; // Added to support inline clamp() styles
 }
 
-const SplitText: React.FC<SplitTextProps> = ({ children, className = "", delay = 0 }) => {
+const SplitText: React.FC<SplitTextProps> = ({ children, className = "", delay = 0, style }) => {
     if (typeof children !== 'string') return null;
     const words = children.split(/\s+/);
     return (
-        <span className={`split-text-wrapper ${className} inline-flex flex-wrap`} aria-label={children}>
+        <span className={`split-text-wrapper ${className} inline-flex flex-wrap`} aria-label={children} style={style}>
             {words.map((word, wordIndex) => (
-                <span key={wordIndex} className="word-span inline-block whitespace-nowrap overflow-hidden pr-[0.3em] pb-2 -mb-2">
+                <span key={wordIndex} aria-hidden="true" className="word-span inline-block whitespace-nowrap overflow-hidden pr-[0.3em] pb-2 -mb-2">
                     <span className="char-wrapper inline-block will-change-transform translate-y-full opacity-0">
                         {word}
                     </span>
@@ -92,7 +94,7 @@ const CircledWord: React.FC<CircledWordProps> = ({ children, className = "" }) =
                     filter="url(#manifesto-premium-glow)"
                 />
             </svg>
-            <span className={`relative z-10 text-white font-serif italic drop-shadow-lg ${className}`}>
+            <span className={`relative z - 10 text - white font - serif italic drop - shadow - lg ${className} `}>
                 {children}
             </span>
         </span>
@@ -187,11 +189,12 @@ const BlueprintSVG: React.FC<SvgProps> = ({ className, speed = "1" }) => (
    ========================================== */
 
 const GlassCTA: React.FC = () => {
-    const buttonRef = useRef<HTMLAnchorElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
     const borderRef = useRef<SVGRectElement>(null);
     const controls = useAnimation();
     const inViewRef = useRef<HTMLDivElement>(null);
     const isInView = useInView(inViewRef, { once: false, margin: "-100px" });
+    const scrollToBooking = useScrollToBooking(); // Added this line
 
     useEffect(() => {
         if (isInView) {
@@ -264,8 +267,8 @@ const GlassCTA: React.FC = () => {
                 onMouseLeave={handleMouseLeave}
             >
                 {/* The Button Body */}
-                <motion.a
-                    href="#contacto"
+                <motion.button
+                    onClick={scrollToBooking}
                     ref={buttonRef}
                     initial="hidden"
                     animate={controls}
@@ -363,7 +366,7 @@ const GlassCTA: React.FC = () => {
                         <div className="absolute inset-0 bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.19,1,0.22,1)]" />
                         <ArrowUpRight className="w-5 h-5 text-white group-hover:text-black transition-colors duration-500 relative z-10" strokeWidth={1.5} />
                     </motion.div>
-                </motion.a>
+                </motion.button>
             </div>
         </section>
     );
@@ -376,7 +379,7 @@ const GlassCTA: React.FC = () => {
 const useScript = (src: string): boolean => {
     const [loaded, setLoaded] = useState(false);
     useEffect(() => {
-        if (document.querySelector(`script[src="${src}"]`)) {
+        if (document.querySelector(`script[src = "${src}"]`)) {
             setLoaded(true); return;
         }
         const script = document.createElement('script');
@@ -421,7 +424,7 @@ export default function ManifestoSection() {
                 scrollTrigger: {
                     trigger: containerRef.current,
                     start: "top top",
-                    end: () => `+=${Math.abs(xMovement)}`,
+                    end: () => `+= ${Math.abs(xMovement)} `,
                     pin: true,
                     scrub: 1,
                     invalidateOnRefresh: true,
@@ -512,23 +515,23 @@ export default function ManifestoSection() {
     return (
         <div
             data-manifesto
-            className={`bg-[#030303] text-[#ececec] selection:bg-red-600/30 selection:text-white transition-opacity duration-1000 overflow-x-hidden relative ${isReady ? 'opacity-100' : 'opacity-0'}`}
+            className={`bg - [#030303] text - [#ececec] selection: bg - red - 600 / 30 selection: text - white transition - opacity duration - 1000 overflow - x - hidden relative ${isReady ? 'opacity-100' : 'opacity-0'} `}
             style={{ fontFamily: "'Inter', sans-serif" }}
         >
             <CustomCursor />
             <NoiseOverlay />
 
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@200;300;400;600&display=swap');
-                [data-manifesto] .font-serif { font-family: 'Instrument Serif', serif; }
-                [data-manifesto] .font-sans { font-family: 'Inter', sans-serif; }
-                [data-manifesto]::-webkit-scrollbar { display: none; }
-                [data-manifesto] .glass-panel {
-                    background: rgba(255, 255, 255, 0.02);
-                    backdrop-filter: blur(10px);
-                    border: 1px solid rgba(255, 255, 255, 0.05);
-                }
-            `}</style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@200;300;400;600&display=swap');
+[data - manifesto].font - serif { font - family: 'Instrument Serif', serif; }
+[data - manifesto].font - sans { font - family: 'Inter', sans - serif; }
+[data - manifesto]:: -webkit - scrollbar { display: none; }
+[data - manifesto].glass - panel {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop - filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+`}</style>
 
             {/* Global SVG Filters — namespaced IDs to prevent collisions */}
             <svg className="hidden">
@@ -571,16 +574,16 @@ export default function ManifestoSection() {
                 <div ref={trackRef} className="relative z-10 flex items-center h-full flex-nowrap pl-[15vw] pr-[20vw] select-none">
 
                     {/* Segment 1: Decisión */}
-                    <div className="flex items-center shrink-0 h-full px-10">
-                        <div className="flex flex-col">
-                            <SplitText className="text-7xl md:text-9xl font-sans font-light tracking-tight text-white/90">Cada</SplitText>
-                            <div className="flex items-center -mt-4">
-                                <CircledWord className="text-8xl md:text-[10rem] ml-[-1rem]">decisión</CircledWord>
-                                <SplitText className="text-5xl md:text-7xl font-serif italic text-gray-500 ml-4 mt-8">es una semilla.</SplitText>
+                    <div className="flex items-center shrink-0 h-full px-4 md:px-10">
+                        <div className="flex flex-col mt-[-10vh] md:mt-0">
+                            <SplitText className="text-4xl md:text-7xl lg:text-9xl font-sans font-light tracking-tight text-white/90">Cada</SplitText>
+                            <div className="flex flex-col md:flex-row items-start md:items-center -mt-2 md:-mt-4">
+                                <CircledWord className="text-5xl md:text-8xl lg:text-[10rem] ml-[-0.5rem] md:ml-[-1rem]">decisión</CircledWord>
+                                <SplitText className="text-3xl md:text-5xl lg:text-7xl font-serif italic text-gray-500 ml-2 md:ml-4 mt-4 md:mt-8">es una semilla.</SplitText>
                             </div>
                         </div>
 
-                        <div className="image-container mx-24 w-[350px] md:w-[420px] h-[600px] rounded-[2rem] overflow-hidden relative group transform-gpu">
+                        <div className="image-container mx-8 md:mx-24 w-[250px] md:w-[350px] lg:w-[420px] h-[400px] md:h-[600px] rounded-[1.5rem] md:rounded-[2rem] overflow-hidden relative group transform-gpu">
                             <div className="absolute inset-0 bg-blue-900/10 mix-blend-multiply z-10 transition-colors duration-1000 group-hover:bg-transparent"></div>
                             <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800" alt="Capital" className="w-full h-full object-cover grayscale blur-[1px] brightness-75 group-hover:blur-none group-hover:grayscale-0 transition-all duration-1000 will-change-transform" />
                             {/* Inner glass border */}
@@ -589,54 +592,61 @@ export default function ManifestoSection() {
                     </div>
 
                     {/* Segment 2: Potencial */}
-                    <div className="flex items-center shrink-0 h-full relative px-20">
-                        <ProfitChartSVG className="parallax-el absolute -top-20 left-10 w-[450px] h-[450px] text-white/5 -z-10 opacity-70" data-speed="0.2" />
+                    <div className="flex items-center shrink-0 h-full relative px-10 md:px-20">
+                        <ProfitChartSVG className="parallax-el absolute -top-10 md:-top-20 left-0 md:left-10 w-[250px] md:w-[450px] h-[250px] md:h-[450px] text-white/5 -z-10 opacity-70" data-speed="0.2" />
 
-                        <div className="flex flex-col gap-2">
-                            <SplitText className="text-4xl md:text-6xl font-sans font-light text-gray-400">revelando el</SplitText>
-                            <SplitText className="text-8xl md:text-[12rem] font-sans font-semibold tracking-tighter text-white uppercase mix-blend-difference drop-shadow-2xl">POTENCIAL</SplitText>
-                            <div className="flex items-center justify-end w-full pr-12">
-                                <div className="h-[1px] w-24 bg-blue-900/40 mr-6"></div>
-                                <SplitText className="text-4xl md:text-6xl font-serif italic text-blue-100 drop-shadow-md">oculto del capital.</SplitText>
+                        <div className="flex flex-col gap-1 md:gap-2">
+                            <SplitText className="text-2xl md:text-4xl lg:text-6xl font-sans font-light text-gray-400">revelando el</SplitText>
+                            <SplitText className="font-sans font-semibold tracking-tighter text-white uppercase mix-blend-difference drop-shadow-2xl leading-none" style={{ fontSize: 'clamp(4rem, 15vw, 12rem)' }}>POTENCIAL</SplitText>
+                            <div className="flex items-center justify-start md:justify-end w-full md:pr-12 mt-2 md:mt-0">
+                                <div className="hidden md:block h-[1px] w-24 bg-blue-900/40 mr-6"></div>
+                                <SplitText className="text-3xl md:text-4xl lg:text-6xl font-serif italic text-blue-100 drop-shadow-md">oculto del capital.</SplitText>
                             </div>
                         </div>
                     </div>
 
                     {/* Segment 3: Arquitectura */}
-                    <div className="flex items-center shrink-0 h-full px-24">
-                        <div className="image-container w-[500px] md:w-[700px] h-[450px] rounded-full overflow-hidden border border-white/5 relative transform-gpu">
+                    <div className="flex flex-col-reverse md:flex-row items-center justify-center shrink-0 h-full px-10 md:px-24 gap-8 md:gap-0">
+                        <div className="image-container w-[280px] md:w-[500px] lg:w-[700px] h-[280px] md:h-[450px] rounded-full overflow-hidden border border-white/5 relative transform-gpu">
                             <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1200" alt="Ciudad" className="w-full h-full object-cover grayscale brightness-50 will-change-transform" />
                             <div className="absolute inset-0 bg-gradient-to-t from-[#010101] via-transparent to-transparent opacity-80 z-10"></div>
-                            <BlueprintSVG className="parallax-el absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-32 text-white/20 z-20" data-speed="0.1" />
+                            <BlueprintSVG className="parallax-el absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 md:w-64 h-20 md:h-32 text-white/20 z-20" data-speed="0.1" />
                         </div>
 
-                        <div className="flex flex-col ml-20 relative">
-                            <AstrolabeCoinSVG className="parallax-el absolute -left-12 -top-12 w-20 h-20 text-blue-900/30" data-speed="-0.3" />
-                            <SplitText className="text-4xl md:text-6xl font-sans font-light text-gray-400">trazando tu propia</SplitText>
-                            <CircledWord className="text-7xl md:text-9xl mt-2">ruta estratégica.</CircledWord>
+                        <div className="flex flex-col md:ml-20 relative">
+                            <AstrolabeCoinSVG className="parallax-el hidden md:block absolute -left-12 -top-12 w-20 h-20 text-blue-900/30" data-speed="-0.3" />
+                            <SplitText className="text-2xl md:text-4xl lg:text-6xl font-sans font-light text-gray-400">trazando tu propia</SplitText>
+                            <CircledWord className="text-4xl md:text-7xl lg:text-9xl mt-2 ml-[-1rem] md:ml-0">ruta estratégica.</CircledWord>
                         </div>
                     </div>
 
                     {/* Segment 4: Libertad — Typographic Climax */}
-                    <div className="flex items-center shrink-0 h-full relative pl-32 pr-[15vw]">
+                    <div className="flex items-center shrink-0 h-full relative pl-10 md:pl-32 pr-[10vw] md:pr-[15vw]">
                         {/* Atmospheric glow */}
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-red-600/[0.06] blur-[180px] rounded-full pointer-events-none"></div>
-                        <div className="absolute top-1/2 left-[60%] -translate-x-1/2 -translate-y-1/2 w-[40vw] h-[40vw] bg-white/[0.02] blur-[100px] rounded-full pointer-events-none"></div>
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] md:w-[80vw] h-[120vw] md:h-[80vw] bg-red-600/[0.06] blur-[100px] md:blur-[180px] rounded-full pointer-events-none"></div>
+                        <div className="absolute top-1/2 left-[60%] -translate-x-1/2 -translate-y-1/2 w-[80vw] md:w-[40vw] h-[80vw] md:h-[40vw] bg-white/[0.02] blur-[80px] md:blur-[100px] rounded-full pointer-events-none"></div>
 
                         <div className="flex flex-col relative z-10">
                             {/* Tracking label */}
-                            <SplitText className="text-2xl md:text-4xl font-sans font-bold uppercase tracking-[0.5em] text-gray-600 mb-8">Guiando tus pasos</SplitText>
+                            <SplitText className="text-sm md:text-2xl lg:text-4xl font-sans font-bold uppercase tracking-[0.3em] md:tracking-[0.5em] text-gray-600 mb-4 md:mb-8">Guiando tus pasos</SplitText>
 
                             {/* "Hacia la" — elegant serif intro */}
-                            <SplitText className="text-6xl md:text-8xl font-serif italic text-white mb-2 drop-shadow-md">Hacia la</SplitText>
+                            <SplitText className="text-4xl md:text-6xl lg:text-8xl font-serif italic text-white mb-0 md:mb-2 drop-shadow-md">Hacia la</SplitText>
 
                             {/* LIBERTAD — MASSIVE, serif, commanding */}
                             <div className="relative transform-gpu will-change-transform">
-                                <SplitText className="text-[12rem] md:text-[22rem] font-serif italic text-white leading-[0.85] tracking-tight drop-shadow-2xl">
+                                <SplitText
+                                    className="font-serif italic text-white leading-[0.85] tracking-tight drop-shadow-2xl"
+                                    style={{ fontSize: 'clamp(5rem, 20vw, 22rem)' }}
+                                >
                                     Libertad
                                 </SplitText>
                                 {/* Subtle glow layer behind the text */}
-                                <div className="absolute inset-0 text-[12rem] md:text-[22rem] font-serif italic text-white/[0.04] blur-[15px] pointer-events-none select-none" aria-hidden="true">
+                                <div
+                                    className="absolute inset-0 font-serif italic text-white/[0.04] blur-[10px] md:blur-[15px] pointer-events-none select-none"
+                                    style={{ fontSize: 'clamp(5rem, 20vw, 22rem)' }}
+                                    aria-hidden="true"
+                                >
                                     Libertad
                                 </div>
                             </div>

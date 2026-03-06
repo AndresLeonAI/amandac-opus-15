@@ -9,6 +9,7 @@ import {
   animate,
   type MotionValue,
 } from 'framer-motion';
+import { MagneticCTA } from '@/components/ui/MagneticCTA';
 
 /* ═══════════════════════════════════════════════
    Constants
@@ -511,6 +512,16 @@ const AboutAmanda = () => {
                   rangeEnd={sectionRanges[i].end}
                 />
               ))}
+
+              <motion.div
+                className="mt-12 md:mt-16 sm:ml-4 lg:ml-0 flex justify-center lg:justify-start lg:-ml-4"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-10%' }}
+                transition={{ duration: 1, delay: 0.2, ease: SILK }}
+              >
+                <MagneticCTA text="Diseñemos tu impacto" className="self-start" />
+              </motion.div>
             </div>
           </div>
 

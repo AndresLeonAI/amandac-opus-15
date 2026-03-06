@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
+import { useScrollToBooking } from '@/hooks/useScrollToBooking';
 
 const Header = () => {
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const scrollToBooking = useScrollToBooking();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious() ?? 0;
@@ -34,8 +36,8 @@ const Header = () => {
     >
       {/* Glassmorphism Background Container */}
       <div className={`absolute inset-0 transition-all duration-700 ${scrolled
-          ? 'bg-black/10 backdrop-blur-xl border-b border-white/5 shadow-sm supports-[backdrop-filter]:bg-black/5'
-          : 'bg-transparent border-transparent'
+        ? 'bg-black/10 backdrop-blur-xl border-b border-white/5 shadow-sm supports-[backdrop-filter]:bg-black/5'
+        : 'bg-transparent border-transparent'
         }`} />
 
       <div className="container mx-auto px-6 py-4 relative z-10">
@@ -69,7 +71,7 @@ const Header = () => {
             variant="premium"
             size="sm"
             className="font-luxury tracking-wide bg-white text-black hover:bg-white/90 hover:scale-105 transition-all duration-300 rounded-full px-6"
-            onClick={() => window.open('https://wa.me/573114688067?text=Hola%20Amanda,%20me%20interesa%20agendar%20una%20consulta%20financiera.', '_blank')}
+            onClick={scrollToBooking}
           >
             Agendar
           </Button>

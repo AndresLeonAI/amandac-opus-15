@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { motion, useScroll, useSpring, useTransform, useVelocity, useMotionValue, type MotionValue } from 'framer-motion';
+import { MagneticCTA } from '@/components/ui/MagneticCTA';
 
 // --- Assets & Styles Injection ---
 const FontStyles = () => (
@@ -17,6 +18,7 @@ const FontStyles = () => (
       margin: 0;
       font-family: var(--font-sans);
       overflow-x: hidden;
+      width: 100vw;
       cursor: none; 
     }
     
@@ -106,10 +108,13 @@ const CanonLevel1_Intro = ({ progress, range, skew }: { progress: MotionValue<nu
         <span className="font-sans text-xs tracking-[0.2em] uppercase">Est. 2026</span>
       </div>
 
-      <motion.div style={{ y: yText, skewY: skew }} className="text-center z-10 max-w-5xl">
-        <h1 className="font-serif text-[clamp(3.5rem,9vw,9rem)] leading-[0.95] text-white tracking-tight">
+      <motion.div style={{ y: yText, skewY: skew }} className="text-center z-10 w-full max-w-5xl">
+        <h1
+          className="font-serif text-white tracking-tight leading-[1] md:leading-[0.95]"
+          style={{ fontSize: "clamp(2.5rem, 12vw, 9rem)" }}
+        >
           <MaskedText progress={progress} range={range} delay={0.0}>
-            <span className="italic font-light opacity-80">Diseño de</span>
+            <span className="italic font-light opacity-80 block md:inline">Diseño de</span>
           </MaskedText>
           <MaskedText progress={progress} range={range} delay={0.05}>
             Estrategia Personal
@@ -140,13 +145,16 @@ const CanonLevel2_Investments = ({ progress, range, skew }: { progress: MotionVa
       <div className="w-full h-full grid grid-cols-1 md:grid-cols-2">
 
         {/* Left: Text Content */}
-        <div className="flex flex-col justify-center px-8 md:pl-24 md:pr-12 bg-[#050505] z-10">
+        <div className="flex flex-col justify-center px-4 sm:px-8 md:pl-24 md:pr-12 bg-[#050505]/90 md:bg-[#050505] z-10 h-full">
           <motion.div style={{ skewY: skew }}>
-            <span className="font-sans text-xs text-stone-400 tracking-[0.2em] uppercase mb-6 block">01 — Crecimiento</span>
+            <span className="font-sans text-[10px] md:text-xs text-stone-400 tracking-[0.2em] uppercase mb-4 md:mb-6 block">01 — Crecimiento</span>
 
-            <h2 className="font-serif text-[clamp(3rem,5vw,5rem)] leading-[1.1] text-white mb-10">
+            <h2
+              className="font-serif text-white mb-6 md:mb-10 leading-[1] md:leading-[1.1]"
+              style={{ fontSize: "clamp(2.5rem, 10vw, 5rem)" }}
+            >
               <MaskedText progress={progress} range={range} delay={0.0}>
-                Inteligencia <br /> <span className="italic text-stone-300">Indexada</span>
+                Inteligencia <br className="hidden sm:block" /> <span className="italic text-stone-300">Indexada</span>
               </MaskedText>
             </h2>
 
@@ -212,10 +220,13 @@ const CanonLevel3_Security = ({ progress, range, skew }: { progress: MotionValue
       </motion.div>
 
       {/* Main Content - Centered & Clean */}
-      <motion.div style={{ skewY: skew }} className="z-10 text-center max-w-4xl w-full">
-        <span className="font-sans text-xs text-stone-400 tracking-[0.2em] uppercase mb-8 block">02 — Preservación</span>
+      <motion.div style={{ skewY: skew }} className="z-10 text-center max-w-4xl w-full px-4 md:px-0">
+        <span className="font-sans text-[10px] md:text-xs text-stone-400 tracking-[0.2em] uppercase mb-6 md:mb-8 block">02 — Preservación</span>
 
-        <h2 className="font-serif text-[clamp(3rem,7vw,7rem)] leading-[0.9] text-white mb-16">
+        <h2
+          className="font-serif text-white mb-10 md:mb-16 leading-[1] md:leading-[0.9]"
+          style={{ fontSize: "clamp(3rem, 15vw, 7rem)" }}
+        >
           <MaskedText progress={progress} range={range} delay={0.0}>
             Patrimonio
           </MaskedText>
@@ -287,13 +298,16 @@ const CanonLevel4_Legacy = ({ progress, range, skew }: { progress: MotionValue<n
       <div className="relative z-10 container mx-auto px-6 md:px-12 w-full h-full flex flex-col md:flex-row items-center justify-between">
 
         {/* Left: Massive Headline */}
-        <motion.div style={{ skewY: skew }} className="md:w-1/2 flex flex-col justify-center h-full">
-          <span className="font-sans text-xs text-stone-500 tracking-[0.3em] uppercase mb-8 block ml-2">03 — Futuro</span>
-          <h2 className="font-serif text-[clamp(4rem,10vw,11rem)] leading-[0.85] text-white tracking-tight">
+        <motion.div style={{ skewY: skew }} className="w-full md:w-1/2 flex flex-col justify-center h-1/2 md:h-full pt-16 md:pt-0">
+          <span className="font-sans text-[10px] md:text-xs text-stone-500 tracking-[0.3em] uppercase mb-4 md:mb-8 block ml-2">03 — Futuro</span>
+          <h2
+            className="font-serif text-white tracking-tight leading-[0.8] md:leading-[0.85]"
+            style={{ fontSize: "clamp(4rem, 20vw, 11rem)" }}
+          >
             <MaskedText progress={progress} range={range} delay={0.0}>
               Legado
             </MaskedText>
-            <MaskedText progress={progress} range={range} delay={0.05}>
+            <MaskedText progress={progress} range={range} delay={0.05} className="mt-[-2vw]">
               <span className="font-light text-white/40">&</span>
             </MaskedText>
             <MaskedText progress={progress} range={range} delay={0.1}>
@@ -306,22 +320,28 @@ const CanonLevel4_Legacy = ({ progress, range, skew }: { progress: MotionValue<n
         <motion.div
           style={{
             opacity: useTransform(progress, [range[0] + 0.04, range[0] + 0.10], [0, 1]),
-            x: useTransform(progress, [range[0] + 0.04, range[0] + 0.10], [50, 0])
+            x: typeof window !== 'undefined' && window.innerWidth >= 768
+              ? useTransform(progress, [range[0] + 0.04, range[0] + 0.10], [50, 0])
+              : useTransform(progress, [range[0] + 0.04, range[0] + 0.10], [0, 0])
           }}
-          className="md:w-[35%] flex flex-col justify-center h-full md:pr-12"
+          className="w-full md:w-[35%] flex flex-col justify-start md:justify-center h-1/2 md:h-full pb-16 md:pb-0 md:pr-12"
         >
-          <div className="space-y-8 border-l border-white/10 pl-8 md:pl-12 py-4">
-            <p className="font-serif text-2xl md:text-3xl text-white/90 leading-tight">
+          <div className="space-y-6 md:space-y-8 border-l border-white/10 pl-6 md:pl-12 py-2 md:py-4">
+            <p className="font-serif text-xl sm:text-2xl md:text-3xl text-white/90 leading-tight">
               "La verdadera riqueza no es solo lo que acumulas, sino la libertad que diseñas."
             </p>
-            <p className="font-sans text-sm md:text-base text-white/60 leading-relaxed max-w-sm">
+            <p className="font-sans text-xs sm:text-sm md:text-base text-white/60 leading-relaxed max-w-sm">
               Acceso privilegiado a instituciones globales como J.P. Morgan y BlackRock. Un plan a 10 años estructurado no solo para crecer, sino para perdurar.
             </p>
 
-            <div className="pt-4">
-              <span className="font-sans text-xs tracking-widest text-white/40 uppercase border-b border-white/20 pb-1">
+            <div className="pt-2 md:pt-4">
+              <span className="font-sans text-[10px] md:text-xs tracking-widest text-white/40 uppercase border-b border-white/20 pb-1">
                 Estrategia 2026-2036
               </span>
+            </div>
+
+            <div className="pt-10 md:pt-14 pointer-events-auto">
+              <MagneticCTA text="Planificar Tu Futuro" className="-ml-4 lg:-ml-8" />
             </div>
           </div>
         </motion.div>

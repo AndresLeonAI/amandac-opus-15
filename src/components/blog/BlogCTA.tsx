@@ -1,19 +1,16 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, MessageSquare, Play, Video } from 'lucide-react';
+import { useScrollToBooking } from '@/hooks/useScrollToBooking';
 
 interface BlogCTAProps {
   title: string;
   description: string;
   buttonText: string;
-  whatsappMessage: string;
 }
 
-export const BlogCTA = ({ title, description, buttonText, whatsappMessage }: BlogCTAProps) => {
-  const handleWhatsApp = () => {
-    const encodedMessage = encodeURIComponent(whatsappMessage);
-    window.open(`https://wa.me/573114688067?text=${encodedMessage}`, '_blank');
-  };
+export const BlogCTA = ({ title, description, buttonText }: BlogCTAProps) => {
+  const scrollToBooking = useScrollToBooking();
 
   return (
     <Card className="glass-card border-primary/20 bg-primary/5 mb-8">
@@ -24,14 +21,17 @@ export const BlogCTA = ({ title, description, buttonText, whatsappMessage }: Blo
         <p className="font-elegant text-muted-foreground leading-relaxed mb-6 max-w-2xl mx-auto">
           {description}
         </p>
-        <Button 
-          onClick={handleWhatsApp}
-          size="lg"
-          className="bg-primary hover:bg-primary-glow text-primary-foreground px-8 py-6 text-lg shadow-elegant hover:shadow-glow transition-all duration-300 group hover:scale-102"
-        >
-          <span className="font-elegant">{buttonText}</span>
-          <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform duration-300" />
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+          <Button
+            variant="premium"
+            size="lg"
+            className="w-full sm:w-auto px-8 group font-luxury tracking-wide shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all duration-500"
+            onClick={scrollToBooking}
+          >
+            Agendar Consulta Privada
+            <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform duration-300" />
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

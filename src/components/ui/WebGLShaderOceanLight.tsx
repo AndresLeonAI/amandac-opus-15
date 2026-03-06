@@ -81,6 +81,12 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
     const canvas = canvasRef.current;
     const { current: refs } = sceneRef;
 
+    // Viewport Culling
+    const observer = new IntersectionObserver(([entry]) => {
+      refs.isRunning = entry.isIntersecting && document.visibilityState === "visible";
+    }, { threshold: 0 });
+    observer.observe(canvas);
+
     /** Minimal vertex shader: pass-through positions to clip-space */
     const vertexShader = `
       attribute vec3 position;
@@ -143,7 +149,12 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
         powerPreference: "high-performance",
         premultipliedAlpha: false,
       });
-      refs.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+      // Throttle pixel ratio on mobile
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      const targetPixelRatio = isMobile ? Math.min(window.devicePixelRatio || 1, 1) : Math.min(window.devicePixelRatio || 1, 2);
+      refs.renderer.setPixelRatio(targetPixelRatio);
+
       // Ensure correct output color space on modern Three.js
       // @ts-ignore - property name varies across Three versions
       refs.renderer.outputColorSpace = (THREE as any).SRGBColorSpace || undefined;
@@ -158,16 +169,20 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
       // Fullscreen orthographic camera
       refs.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
 
+      // Throttle distortion on mobile for performance
+      const activeDistortion = isMobile ? distortion * 0.5 : distortion;
+      const activeSpeed = isMobile ? speed * 0.8 : speed;
+
       // Uniforms passed to the RawShaderMaterial
       refs.uniforms = {
         resolution: { value: [window.innerWidth, window.innerHeight] },
         time: { value: 0.0 },
         xScale: { value: xScale },
         yScale: { value: yScale },
-        distortion: { value: distortion },
+        distortion: { value: activeDistortion },
         bgColorTop: { value: topBlue },
         bgColorBottom: { value: bottomBlue },
-        speed: { value: speed },
+        speed: { value: activeSpeed },
       };
 
       // Two triangles forming a full-screen quad
@@ -225,7 +240,9 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
 
     /** Pause/resume when tab visibility changes (optional optimization) */
     const handleVisibility = () => {
-      refs.isRunning = document.visibilityState === "visible";
+      const rect = canvas.getBoundingClientRect();
+      const isIntersecting = rect.top < window.innerHeight && rect.bottom > 0;
+      refs.isRunning = document.visibilityState === "visible" && isIntersecting;
     };
 
     initScene();
@@ -233,22 +250,31 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
     window.addEventListener("resize", handleResize, { passive: true });
     document.addEventListener("visibilitychange", handleVisibility, { passive: true });
 
-    /** Thorough cleanup on unmount */
+    /** Thorough cleanup on unmount (Elite Performance Refactor) */
     return () => {
+      observer.disconnect();
       if (refs.animationId) cancelAnimationFrame(refs.animationId);
       window.removeEventListener("resize", handleResize);
       document.removeEventListener("visibilitychange", handleVisibility);
+
       if (refs.mesh) {
         refs.scene?.remove(refs.mesh);
-        refs.mesh.geometry.dispose();
-        const mat: any = refs.mesh.material as any;
-        if (mat && typeof mat.dispose === "function") mat.dispose();
+        if (refs.mesh.geometry) refs.mesh.geometry.dispose();
+        if (refs.mesh.material) {
+          const mat = refs.mesh.material as THREE.Material;
+          mat.dispose();
+        }
       }
-      refs.renderer?.dispose();
+
+      if (refs.renderer) {
+        refs.renderer.dispose();
+        refs.renderer.forceContextLoss(); // Extreme VRAM purge
+        refs.renderer.domElement?.remove(); // Detach to prevent ghost contexts
+      }
     };
   }, [bottomColor, topColor, speed, distortion, xScale, yScale]);
 
-  return <canvas ref={canvasRef} className={className} />;
+  return <canvas ref={canvasRef} className={className} style={{ willChange: "transform" }} />;
 };
 
 export default WebGLShaderOceanLight;

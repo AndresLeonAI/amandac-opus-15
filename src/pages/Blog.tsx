@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Calendar, Clock, ArrowRight, FileText, TrendingUp, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BlogFilters } from '@/components/BlogFilters';
+import { useScrollToBooking } from '@/hooks/useScrollToBooking';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import emergencyFundImage from '@/assets/blog-emergency-fund.jpg';
@@ -59,10 +60,8 @@ const blogPosts = [
 const Blog = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set());
-  
-  const handleWhatsApp = () => {
-    window.open('https://wa.me/573114688067?text=Hola%20Amanda,%20me%20interesa%20conocer%20más%20sobre%20sus%20servicios%20de%20asesoría%20financiera.', '_blank');
-  };
+
+  const scrollToBooking = useScrollToBooking();
 
   // Get all unique categories
   const categories = useMemo(() => {
@@ -77,14 +76,14 @@ const Blog = () => {
   const filteredPosts = useMemo(() => {
     return blogPosts.filter(post => {
       const query = searchQuery.toLowerCase();
-      const matchesQuery = !query || 
+      const matchesQuery = !query ||
         post.title.toLowerCase().includes(query) ||
         post.excerpt.toLowerCase().includes(query) ||
-        (post.keywords && post.keywords.some(keyword => 
+        (post.keywords && post.keywords.some(keyword =>
           keyword.toLowerCase().includes(query)
         ));
 
-      const matchesCategory = activeCategories.size === 0 || 
+      const matchesCategory = activeCategories.size === 0 ||
         (post.categories && post.categories.some(cat => activeCategories.has(cat)));
 
       return matchesQuery && matchesCategory;
@@ -96,7 +95,7 @@ const Blog = () => {
     // Premium scroll animations for blog page
     const observeElements = () => {
       const elements = document.querySelectorAll('.fade-in, .slide-up, .reveal-up, .reveal-scale');
-      
+
       const observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
@@ -114,7 +113,7 @@ const Blog = () => {
     // Staggered animations for cards
     const observeCards = () => {
       const cards = document.querySelectorAll('.blog-card');
-      
+
       const cardObserver = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry, index) => {
@@ -147,7 +146,7 @@ const Blog = () => {
     };
 
     document.addEventListener('keydown', handleKeyboardNavigation);
-    
+
     return () => {
       document.removeEventListener('keydown', handleKeyboardNavigation);
     };
@@ -157,9 +156,9 @@ const Blog = () => {
     <div className="min-h-screen">
       {/* WebGL Ocean Background - Fixed behind content, not in hero */}
       <WebGLShaderOceanLight className="pointer-events-none fixed inset-0 z-0" />
-      
+
       <Header />
-      
+
       <main className="relative z-10 pt-24">
         {/* Hero Section */}
         <section className="py-16 relative bg-background">
@@ -175,11 +174,11 @@ const Blog = () => {
                 <span className="text-primary"> finanzas</span>
               </h1>
               <p className="font-elegant text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-                Insights profesionales, estrategias avanzadas y guías prácticas 
+                Insights profesionales, estrategias avanzadas y guías prácticas
                 para optimizar tu patrimonio financiero.
               </p>
             </motion.div>
-            
+
             {/* Search and Filters */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -218,14 +217,14 @@ const Blog = () => {
                   >
                     {/* Image */}
                     <div className="relative aspect-[16/9] overflow-hidden">
-                      <img 
-                        src={post.image} 
+                      <img
+                        src={post.image}
                         alt={`Ilustración del artículo: ${post.title}`}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         loading="lazy"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-60" />
-                      
+
                       {/* Category Badge */}
                       <div className="absolute top-4 left-4">
                         <div className="flex items-center space-x-2 bg-primary/10 backdrop-blur-sm border border-primary/20 rounded-full px-3 py-1.5">
@@ -242,11 +241,11 @@ const Blog = () => {
                       <h2 className="font-luxury text-2xl text-foreground mb-4 leading-tight group-hover:text-primary/90 transition-colors duration-300">
                         {post.title}
                       </h2>
-                      
+
                       <p className="font-elegant text-muted-foreground text-base leading-relaxed mb-6 line-clamp-3 flex-1">
                         {post.excerpt}
                       </p>
-                      
+
                       {/* Meta Info */}
                       <div className="flex items-center justify-between pt-4 border-t border-border/20">
                         <div className="flex items-center space-x-4 text-sm text-muted-foreground/80">
@@ -259,7 +258,7 @@ const Blog = () => {
                             <span className="font-elegant">{post.readTime}</span>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center space-x-2 text-primary font-elegant text-sm font-medium">
                           <span>Leer más</span>
                           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
@@ -288,11 +287,11 @@ const Blog = () => {
                 <span className="text-primary"> personalizada?</span>
               </h2>
               <p className="font-elegant text-muted-foreground text-lg mb-8">
-                Cada situación financiera es única. Discutamos su caso específico 
+                Cada situación financiera es única. Discutamos su caso específico
                 en una consulta confidencial.
               </p>
-              <Button 
-                onClick={handleWhatsApp}
+              <Button
+                onClick={scrollToBooking}
                 size="lg"
                 className="bg-primary hover:bg-primary-glow text-primary-foreground px-10 py-6 text-lg shadow-elegant hover:shadow-glow transition-all duration-300 group hover:scale-102"
               >
@@ -303,7 +302,7 @@ const Blog = () => {
           </div>
         </section>
       </main>
-      
+
       <Footer />
     </div>
   );
