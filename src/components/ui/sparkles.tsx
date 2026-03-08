@@ -1,5 +1,8 @@
 "use client";
 import React, { useCallback, useEffect, useRef } from "react";
+import gsap from "gsap";
+
+const IS_MOBILE = typeof window !== 'undefined' && window.innerWidth < 768;
 
 interface SparklesCoreProps {
   id?: string;
@@ -31,11 +34,14 @@ export const SparklesCore: React.FC<SparklesCoreProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
-  const animationRef = useRef<number>();
+  const isVisibleRef = useRef(true);
+
+  // Mobile: reduce density to 40% for thermal shield
+  const effectiveDensity = IS_MOBILE ? particleDensity * 0.4 : particleDensity;
 
   const createParticles = useCallback((width: number, height: number): Particle[] => {
-    const particleCount = Math.floor((width * height) / 8000 * (particleDensity / 100));
-    
+    const particleCount = Math.floor((width * height) / 8000 * (effectiveDensity / 100));
+
     return Array.from({ length: particleCount }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -44,94 +50,103 @@ export const SparklesCore: React.FC<SparklesCoreProps> = ({
       velocityX: (Math.random() - 0.5) * 1.2,
       velocityY: (Math.random() - 0.5) * 1.2,
     }));
-  }, [minSize, maxSize, particleDensity]);
+  }, [minSize, maxSize, effectiveDensity]);
 
-  const animate = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    particlesRef.current = particlesRef.current.map(particle => {
-      let newX = particle.x + particle.velocityX;
-      let newY = particle.y + particle.velocityY;
-
-      // Wrap around screen edges
-      if (newX < 0) newX = canvas.width;
-      if (newX > canvas.width) newX = 0;
-      if (newY < 0) newY = canvas.height;
-      if (newY > canvas.height) newY = 0;
-
-      // Calculate dynamic opacity with enhanced brightness
-      const time = Date.now() * 0.003;
-      const dynamicOpacity = Math.sin(time + particle.x * 0.01) * 0.4 + 0.8;
-
-      // Draw particle with proper RGBA color
-      ctx.beginPath();
-      ctx.arc(newX, newY, particle.size, 0, Math.PI * 2);
-      
-      // Convert hex to RGB and add alpha
-      const hex = particleColor.replace('#', '');
-      const r = parseInt(hex.substr(0, 2), 16);
-      const g = parseInt(hex.substr(2, 2), 16);
-      const b = parseInt(hex.substr(4, 2), 16);
-      
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${dynamicOpacity})`;
-      ctx.fill();
-
-      return {
-        ...particle,
-        x: newX,
-        y: newY,
-        opacity: dynamicOpacity,
-      };
-    });
-
-    animationRef.current = requestAnimationFrame(animate);
+  // Pre-parse hex color once (avoid per-frame string ops)
+  const colorRef = useRef({ r: 255, g: 255, b: 255 });
+  useEffect(() => {
+    const hex = particleColor.replace('#', '');
+    colorRef.current = {
+      r: parseInt(hex.substr(0, 2), 16),
+      g: parseInt(hex.substr(2, 2), 16),
+      b: parseInt(hex.substr(4, 2), 16),
+    };
   }, [particleColor]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // IntersectionObserver for viewport culling
+    const observer = new IntersectionObserver(
+      ([entry]) => { isVisibleRef.current = entry.isIntersecting; },
+      { threshold: 0 }
+    );
+    observer.observe(canvas);
+
+    // Mobile: reduce canvas DPR to 1
+    const dpr = IS_MOBILE ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+
     const resizeCanvas = () => {
       const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-      particlesRef.current = createParticles(canvas.width, canvas.height);
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      const ctx = canvas.getContext("2d");
+      if (ctx) ctx.scale(dpr, dpr);
+      particlesRef.current = createParticles(rect.width, rect.height);
     };
 
-    // Set up ResizeObserver for better resize handling
-    const resizeObserver = new ResizeObserver(resizeCanvas);
-    resizeObserver.observe(canvas);
+    // ResizeObserver with debounce for stable measurement
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    const ro = new ResizeObserver(() => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resizeCanvas, 150);
+    });
+    ro.observe(canvas);
 
     // Initial setup
     resizeCanvas();
-    
-    // Start animation
-    animationRef.current = requestAnimationFrame(animate);
+
+    // Render function — subordinated to gsap.ticker
+    const { r, g, b } = colorRef.current;
+    const render = () => {
+      if (!isVisibleRef.current || document.hidden) return; // Skip frame if not visible
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const displayW = canvas.width / dpr;
+      const displayH = canvas.height / dpr;
+      ctx.clearRect(0, 0, displayW, displayH);
+
+      const time = Date.now() * 0.003;
+
+      particlesRef.current = particlesRef.current.map(particle => {
+        let newX = particle.x + particle.velocityX;
+        let newY = particle.y + particle.velocityY;
+
+        if (newX < 0) newX = displayW;
+        if (newX > displayW) newX = 0;
+        if (newY < 0) newY = displayH;
+        if (newY > displayH) newY = 0;
+
+        const dynamicOpacity = Math.sin(time + particle.x * 0.01) * 0.4 + 0.8;
+
+        ctx.beginPath();
+        ctx.arc(newX, newY, particle.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${dynamicOpacity})`;
+        ctx.fill();
+
+        return { ...particle, x: newX, y: newY, opacity: dynamicOpacity };
+      });
+    };
+
+    gsap.ticker.add(render);
 
     return () => {
-      resizeObserver.disconnect();
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      observer.disconnect();
+      ro.disconnect();
+      clearTimeout(resizeTimer);
+      gsap.ticker.remove(render);
     };
-  }, [createParticles, animate]);
+  }, [createParticles, particleColor]);
 
   return (
     <canvas
       ref={canvasRef}
       id={id}
       className={className}
-      style={{
-        background,
-        pointerEvents: "none",
-        display: "block",
-      }}
+      style={{ background, pointerEvents: "none", display: "block" }}
     />
   );
 };

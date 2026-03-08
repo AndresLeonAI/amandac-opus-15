@@ -3,6 +3,9 @@ import Lenis from 'lenis';
 import gsap from 'gsap';
 import { useLocation } from 'react-router-dom';
 
+const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+const PREFERS_REDUCED = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 interface ScrollOrchestratorProps {
     children: React.ReactNode;
 }
@@ -12,38 +15,35 @@ const ScrollOrchestrator: React.FC<ScrollOrchestratorProps> = ({ children }) => 
     const location = useLocation();
 
     useEffect(() => {
-        // 1. Initialize Lenis
+        // Respect prefers-reduced-motion: skip Lenis entirely
+        if (PREFERS_REDUCED) return;
+
         const lenis = new Lenis({
-            duration: 1.2,
-            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // expoOut
+            duration: IS_TOUCH ? 0.8 : 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
             orientation: 'vertical',
             gestureOrientation: 'vertical',
-            smoothWheel: true,
+            smoothWheel: !IS_TOUCH,
             wheelMultiplier: 1.0,
-            touchMultiplier: 2.0,
+            touchMultiplier: IS_TOUCH ? 1.5 : 2.0,
             infinite: false,
-            // Auto-raf is disabled since we will hook into GSAP's ticker
             autoRaf: false,
         });
 
         lenisRef.current = lenis;
 
-        // 2. Connect Lenis to GSAP Ticker for frame-perfect sync
-        gsap.ticker.add((time) => {
-            // time is in seconds, Lenis needs milliseconds
-            lenis.raf(time * 1000);
-        });
-
-        // Disable lag smoothing to prevent visual jumps on initial load or severe thread-blocking
+        // Connect Lenis to GSAP Ticker — same reference for cleanup
+        const update = (time: number) => lenis.raf(time * 1000);
+        gsap.ticker.add(update);
         gsap.ticker.lagSmoothing(0);
 
         return () => {
-            gsap.ticker.remove((time) => lenis.raf(time * 1000));
+            gsap.ticker.remove(update);
             lenis.destroy();
         };
     }, []);
 
-    // Reset scroll specifically on route change
+    // Reset scroll on route change
     useEffect(() => {
         if (lenisRef.current) {
             lenisRef.current.scrollTo(0, { immediate: true });

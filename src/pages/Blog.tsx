@@ -1,6 +1,8 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 import { Calendar, Clock, ArrowRight, FileText, TrendingUp, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BlogFilters } from '@/components/BlogFilters';
@@ -11,6 +13,8 @@ import emergencyFundImage from '@/assets/blog-emergency-fund.jpg';
 import inflationImage from '@/assets/blog-inflation.jpg';
 import entrepreneursImage from '@/assets/blog-entrepreneurs.jpg';
 import WebGLShaderOceanLight from '@/components/ui/WebGLShaderOceanLight';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const blogPosts = [
   {
@@ -60,10 +64,10 @@ const blogPosts = [
 const Blog = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set());
+  const mainRef = useRef<HTMLDivElement>(null);
 
   const scrollToBooking = useScrollToBooking();
 
-  // Get all unique categories
   const categories = useMemo(() => {
     const allCategories = new Set<string>();
     blogPosts.forEach(post => {
@@ -72,7 +76,6 @@ const Blog = () => {
     return Array.from(allCategories);
   }, []);
 
-  // Filter posts based on search and categories
   const filteredPosts = useMemo(() => {
     return blogPosts.filter(post => {
       const query = searchQuery.toLowerCase();
@@ -90,12 +93,26 @@ const Blog = () => {
     });
   }, [searchQuery, activeCategories]);
 
+  // GSAP scroll reveals replacing framer motion
+  useGSAP(() => {
+    if (!mainRef.current) return;
+    gsap.from(mainRef.current.querySelectorAll('.gs-reveal'), {
+      opacity: 0,
+      y: 30,
+      duration: 0.8,
+      ease: 'expo.out',
+      stagger: 0.1,
+      scrollTrigger: {
+        trigger: mainRef.current,
+        start: 'top 80%',
+        toggleActions: 'play none none none',
+      },
+    });
+  }, { scope: mainRef });
 
   useEffect(() => {
-    // Premium scroll animations for blog page
     const observeElements = () => {
       const elements = document.querySelectorAll('.fade-in, .slide-up, .reveal-up, .reveal-scale');
-
       const observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
@@ -106,14 +123,11 @@ const Blog = () => {
         },
         { threshold: 0.2, rootMargin: '30px' }
       );
-
       elements.forEach((el) => observer.observe(el));
     };
 
-    // Staggered animations for cards
     const observeCards = () => {
       const cards = document.querySelectorAll('.blog-card');
-
       const cardObserver = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry, index) => {
@@ -126,14 +140,12 @@ const Blog = () => {
         },
         { threshold: 0.1 }
       );
-
       cards.forEach((card) => cardObserver.observe(card));
     };
 
     observeElements();
     observeCards();
 
-    // Add keyboard navigation enhancement
     const handleKeyboardNavigation = (e: KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         const target = e.target as HTMLElement;
@@ -146,29 +158,21 @@ const Blog = () => {
     };
 
     document.addEventListener('keydown', handleKeyboardNavigation);
-
     return () => {
       document.removeEventListener('keydown', handleKeyboardNavigation);
     };
   }, []);
 
   return (
-    <div className="min-h-screen">
-      {/* WebGL Ocean Background - Fixed behind content, not in hero */}
+    <div className="min-h-screen" ref={mainRef}>
       <WebGLShaderOceanLight className="pointer-events-none fixed inset-0 z-0" />
-
       <Header />
 
       <main className="relative z-10 pt-24">
         {/* Hero Section */}
         <section className="py-16 relative bg-background">
           <div className="container mx-auto px-6">
-            <motion.div
-              className="text-center max-w-4xl mx-auto fade-in"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
+            <div className="gs-reveal text-center max-w-4xl mx-auto fade-in">
               <h1 className="font-luxury text-4xl md:text-6xl text-foreground mb-6">
                 Blog de
                 <span className="text-primary"> finanzas</span>
@@ -177,14 +181,9 @@ const Blog = () => {
                 Insights profesionales, estrategias avanzadas y guías prácticas
                 para optimizar tu patrimonio financiero.
               </p>
-            </motion.div>
+            </div>
 
-            {/* Search and Filters */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
+            <div className="gs-reveal">
               <BlogFilters
                 query={searchQuery}
                 setQuery={setSearchQuery}
@@ -192,7 +191,7 @@ const Blog = () => {
                 activeCategories={activeCategories}
                 setActiveCategories={setActiveCategories}
               />
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -200,7 +199,7 @@ const Blog = () => {
         <section className="py-20">
           <div className="container mx-auto px-6 max-w-7xl">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {filteredPosts.map((post, index) => (
+              {filteredPosts.map((post) => (
                 <Link
                   key={post.id}
                   to={`/blog/${post.slug}`}
@@ -208,14 +207,9 @@ const Blog = () => {
                   tabIndex={0}
                   aria-label={`Leer artículo: ${post.title}`}
                 >
-                  <motion.article
+                  <article
                     className="led-card rounded-xl overflow-hidden h-full flex flex-col transition-all duration-500 slide-up hover:scale-[1.02] focus:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-primary/20"
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
                   >
-                    {/* Image */}
                     <div className="relative aspect-[16/9] overflow-hidden">
                       <img
                         src={post.image}
@@ -224,8 +218,6 @@ const Blog = () => {
                         loading="lazy"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-60" />
-
-                      {/* Category Badge */}
                       <div className="absolute top-4 left-4">
                         <div className="flex items-center space-x-2 bg-primary/10 backdrop-blur-sm border border-primary/20 rounded-full px-3 py-1.5">
                           <post.icon className="w-3.5 h-3.5 text-primary" />
@@ -236,17 +228,13 @@ const Blog = () => {
                       </div>
                     </div>
 
-                    {/* Content */}
                     <div className="p-8 flex-1 flex flex-col">
                       <h2 className="font-luxury text-2xl text-foreground mb-4 leading-tight group-hover:text-primary/90 transition-colors duration-300">
                         {post.title}
                       </h2>
-
                       <p className="font-elegant text-muted-foreground text-base leading-relaxed mb-6 line-clamp-3 flex-1">
                         {post.excerpt}
                       </p>
-
-                      {/* Meta Info */}
                       <div className="flex items-center justify-between pt-4 border-t border-border/20">
                         <div className="flex items-center space-x-4 text-sm text-muted-foreground/80">
                           <div className="flex items-center space-x-1.5">
@@ -258,14 +246,13 @@ const Blog = () => {
                             <span className="font-elegant">{post.readTime}</span>
                           </div>
                         </div>
-
                         <div className="flex items-center space-x-2 text-primary font-elegant text-sm font-medium">
                           <span>Leer más</span>
                           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                         </div>
                       </div>
                     </div>
-                  </motion.article>
+                  </article>
                 </Link>
               ))}
             </div>
@@ -275,13 +262,7 @@ const Blog = () => {
         {/* CTA Section */}
         <section className="py-24 relative">
           <div className="container mx-auto px-6">
-            <motion.div
-              className="max-w-3xl mx-auto text-center fade-in"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
+            <div className="gs-reveal max-w-3xl mx-auto text-center fade-in">
               <h2 className="font-luxury text-3xl md:text-4xl text-foreground mb-6">
                 ¿Necesita asesoría
                 <span className="text-primary"> personalizada?</span>
@@ -298,7 +279,7 @@ const Blog = () => {
                 Agendar consulta privada
                 <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform duration-300" />
               </Button>
-            </motion.div>
+            </div>
           </div>
         </section>
       </main>

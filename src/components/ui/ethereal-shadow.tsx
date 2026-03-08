@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useId, useEffect, CSSProperties } from 'react';
-import { animate, useMotionValue, AnimationPlaybackControls } from 'framer-motion';
+import gsap from 'gsap';
 
 // --- TYPE DEFINITIONS ---
 interface AnimationConfig {
@@ -56,34 +56,31 @@ export function EtherealShadow({
     const id = useInstanceId();
     const animationEnabled = animation && animation.scale > 0;
     const feColorMatrixRef = useRef<SVGFEColorMatrixElement>(null);
-    const hueRotateMotionValue = useMotionValue(180);
-    const hueRotateAnimation = useRef<AnimationPlaybackControls | null>(null);
+    const tweenRef = useRef<gsap.core.Tween | null>(null);
 
     const displacementScale = animation ? mapRange(animation.scale, 1, 100, 20, 100) : 0;
     const animationDuration = animation ? mapRange(animation.speed, 1, 100, 1000, 50) : 1;
 
+    // GSAP replaces framer-motion animate + useMotionValue for hue rotation
     useEffect(() => {
         if (feColorMatrixRef.current && animationEnabled) {
-            if (hueRotateAnimation.current) {
-                hueRotateAnimation.current.stop();
-            }
-            hueRotateMotionValue.set(0);
-            hueRotateAnimation.current = animate(hueRotateMotionValue, 360, {
+            const proxy = { value: 0 };
+            tweenRef.current = gsap.to(proxy, {
+                value: 360,
                 duration: animationDuration / 25,
-                repeat: Infinity,
-                repeatType: "loop",
-                ease: "linear",
-                onUpdate: (value: number) => {
+                repeat: -1,
+                ease: 'none',
+                onUpdate: () => {
                     if (feColorMatrixRef.current) {
-                        feColorMatrixRef.current.setAttribute("values", String(value));
+                        feColorMatrixRef.current.setAttribute("values", String(proxy.value));
                     }
-                }
+                },
             });
             return () => {
-                hueRotateAnimation.current?.stop();
+                tweenRef.current?.kill();
             };
         }
-    }, [animationEnabled, animationDuration, hueRotateMotionValue]);
+    }, [animationEnabled, animationDuration]);
 
     return (
         <div
@@ -113,7 +110,7 @@ export function EtherealShadow({
                                 <feTurbulence
                                     result="undulation"
                                     numOctaves="2"
-                                    baseFrequency={`${mapRange(animation.scale, 0, 100, 0.001, 0.0005)},${mapRange(animation.scale, 0, 100, 0.004, 0.002)}`}
+                                    baseFrequency={`${mapRange(animation!.scale, 0, 100, 0.001, 0.0005)},${mapRange(animation!.scale, 0, 100, 0.004, 0.002)}`}
                                     seed="0"
                                     type="turbulence"
                                 />

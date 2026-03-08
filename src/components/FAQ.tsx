@@ -1,7 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 import { GlareCard } from '@/components/ui/glare-card';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const faqs = [
   {
@@ -28,74 +32,89 @@ const faqs = [
 
 const FAQ = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const containerRef = useRef<HTMLElement>(null);
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
+  // GSAP scroll reveal
+  useGSAP(() => {
+    if (!containerRef.current) return;
+    gsap.from(containerRef.current.querySelector('.faq-header'), {
+      opacity: 0,
+      y: 30,
+      duration: 0.6,
+      ease: 'expo.out',
+      scrollTrigger: {
+        trigger: containerRef.current,
+        start: 'top 85%',
+        toggleActions: 'play none none none',
+      },
+    });
+    gsap.from(containerRef.current.querySelectorAll('.faq-item'), {
+      opacity: 0,
+      y: 20,
+      duration: 0.5,
+      stagger: 0.1,
+      ease: 'expo.out',
+      scrollTrigger: {
+        trigger: containerRef.current,
+        start: 'top 75%',
+        toggleActions: 'play none none none',
+      },
+    });
+  }, { scope: containerRef });
+
   return (
-    <section className="py-16 relative overflow-hidden">
+    <section ref={containerRef} className="py-16 relative overflow-hidden">
       <div className="container mx-auto px-6 relative z-10">
-        <motion.div 
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
+        <div className="faq-header text-center mb-12">
           <h2 className="font-luxury text-3xl md:text-4xl text-primary mb-4">
             Preguntas Frecuentes
           </h2>
           <p className="font-elegant text-white text-lg max-w-xl mx-auto">
             Consultas comunes sobre asesoría financiera
           </p>
-        </motion.div>
+        </div>
 
         <div className="max-w-2xl mx-auto space-y-4">
           {faqs.map((faq, index) => (
-              <GlareCard
-                key={index}
-                className="p-0"
+            <GlareCard
+              key={index}
+              className="p-0"
+            >
+              <div
+                className="faq-item border border-primary/20 rounded-lg overflow-hidden bg-card/30 backdrop-blur-sm"
               >
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="border border-primary/20 rounded-lg overflow-hidden bg-card/30 backdrop-blur-sm"
+                <button
+                  onClick={() => toggleFAQ(index)}
+                  className="w-full text-left px-6 py-4 hover:bg-primary/5 transition-all duration-300 group flex items-center justify-between"
                 >
-                  <button
-                    onClick={() => toggleFAQ(index)}
-                    className="w-full text-left px-6 py-4 hover:bg-primary/5 transition-all duration-300 group flex items-center justify-between"
+                  <h3 className="font-luxury text-lg text-white group-hover:text-primary-glow transition-colors duration-300">
+                    {faq.question}
+                  </h3>
+                  <div
+                    className="transition-transform duration-300"
+                    style={{ transform: openIndex === index ? 'rotate(180deg)' : 'rotate(0deg)' }}
                   >
-                    <h3 className="font-luxury text-lg text-white group-hover:text-primary-glow transition-colors duration-300">
-                      {faq.question}
-                    </h3>
-                    <motion.div
-                      animate={{ rotate: openIndex === index ? 180 : 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <ChevronDown className="w-5 h-5 text-primary transition-colors duration-300" />
-                    </motion.div>
-                  </button>
-                  
-                  <AnimatePresence>
-                    {openIndex === index && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="overflow-hidden border-t border-primary/10"
-                      >
-                        <div className="px-6 pb-4 pt-3 text-white/80 font-elegant leading-relaxed text-sm">
-                          {faq.answer}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              </GlareCard>
+                    <ChevronDown className="w-5 h-5 text-primary transition-colors duration-300" />
+                  </div>
+                </button>
+
+                {/* CSS-only accordion: grid-template-rows transition, no AnimatePresence */}
+                <div
+                  className="grid transition-[grid-template-rows] duration-300 ease-out"
+                  style={{ gridTemplateRows: openIndex === index ? '1fr' : '0fr' }}
+                >
+                  <div className="overflow-hidden border-t border-primary/10">
+                    <div className="px-6 pb-4 pt-3 text-white/80 font-elegant leading-relaxed text-sm">
+                      {faq.answer}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </GlareCard>
           ))}
         </div>
       </div>

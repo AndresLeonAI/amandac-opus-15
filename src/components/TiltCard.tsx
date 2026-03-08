@@ -1,6 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
+const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
 interface TiltCardProps {
   children: React.ReactNode;
   className?: string;
@@ -8,17 +10,17 @@ interface TiltCardProps {
   glareEffect?: boolean;
 }
 
-export const TiltCard = ({ 
-  children, 
-  className, 
+export const TiltCard = ({
+  children,
+  className,
   intensity = 15,
-  glareEffect = true 
+  glareEffect = true
 }: TiltCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const card = cardRef.current;
-    if (!card) return;
+    if (!card || IS_TOUCH) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       const rect = card.getBoundingClientRect();
@@ -31,7 +33,7 @@ export const TiltCard = ({
       const rotateX = (y - centerY) / centerY * -intensity;
 
       card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(0)`;
-      
+
       if (glareEffect) {
         card.style.setProperty('--mouse-x', `${(x / rect.width) * 100}%`);
         card.style.setProperty('--mouse-y', `${(y / rect.height) * 100}%`);
@@ -105,7 +107,7 @@ export const TiltCard = ({
           </div>
         </>
       )}
-      
+
       <div className="relative z-10">
         {children}
       </div>

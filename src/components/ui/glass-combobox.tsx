@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Search, Info } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface Option {
   value: string;
@@ -38,7 +37,7 @@ export const GlassCombobox: React.FC<GlassComboboxProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showTooltip, setShowTooltip] = useState(false);
-  
+
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -66,7 +65,7 @@ export const GlassCombobox: React.FC<GlassComboboxProps> = ({
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
-        setFocusedIndex(prev => 
+        setFocusedIndex(prev =>
           prev < filteredOptions.length - 1 ? prev + 1 : prev
         );
         break;
@@ -122,23 +121,22 @@ export const GlassCombobox: React.FC<GlassComboboxProps> = ({
               >
                 <Info className="w-4 h-4" />
               </button>
-              <AnimatePresence>
-                {showTooltip && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-3 bg-card/90 backdrop-blur-md border border-border/30 rounded-lg shadow-2xl z-50"
-                  >
-                    <div className="text-xs text-muted-foreground leading-relaxed">
-                      {tooltip}
-                    </div>
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
-                      <div className="w-2 h-2 bg-card/90 border-r border-b border-border/30 rotate-45"></div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* CSS-only tooltip transition */}
+              <div
+                className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-card/90 backdrop-blur-md border border-border/30 rounded-lg shadow-2xl z-50 transition-all duration-200"
+                style={{
+                  opacity: showTooltip ? 1 : 0,
+                  transform: `translateX(-50%) translateY(${showTooltip ? '0' : '10px'})`,
+                  pointerEvents: showTooltip ? 'auto' : 'none',
+                }}
+              >
+                <div className="text-xs text-muted-foreground leading-relaxed">
+                  {tooltip}
+                </div>
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                  <div className="w-2 h-2 bg-card/90 border-r border-b border-border/30 rotate-45"></div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -156,7 +154,7 @@ export const GlassCombobox: React.FC<GlassComboboxProps> = ({
         {/* Glass Background Effect */}
         <div className="absolute inset-0 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-xl border border-border/30 rounded-lg shadow-elegant" />
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-lg" />
-        
+
         {/* Input */}
         <div className="relative">
           <input
@@ -173,90 +171,81 @@ export const GlassCombobox: React.FC<GlassComboboxProps> = ({
             aria-haspopup="listbox"
             role="combobox"
           />
-          
+
           {/* Search Icon */}
           <div className="absolute right-12 top-1/2 transform -translate-y-1/2 z-20">
             <Search className="w-4 h-4 text-muted-foreground" />
           </div>
-          
-          {/* Chevron */}
+
+          {/* Chevron — CSS transition replaces motion.div animate */}
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 z-20 p-1 hover:bg-primary/10 rounded transition-colors"
           >
-            <motion.div
-              animate={{ rotate: isOpen ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
+            <div
+              className="transition-transform duration-200"
+              style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
             >
               <ChevronDown className="w-4 h-4 text-muted-foreground" />
-            </motion.div>
+            </div>
           </button>
         </div>
 
-        {/* Dropdown */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="absolute top-full left-0 right-0 mt-2 max-h-64 overflow-auto z-50"
-            >
-              {/* Glass Dropdown Background */}
-              <div className="bg-card/90 backdrop-blur-xl border border-border/30 rounded-lg shadow-2xl">
-                <div className="py-2">
-                  {filteredOptions.length > 0 ? (
-                    filteredOptions.map((option, index) => (
-                      <button
-                        key={option.value}
-                        onClick={() => handleOptionSelect(option.value)}
-                        className={`w-full px-4 py-3 text-left text-sm font-elegant transition-all duration-200 ${
-                          index === focusedIndex
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-foreground hover:bg-primary/5'
-                        } ${
-                          option.value === value
-                            ? 'bg-primary/10 text-primary font-medium'
-                            : ''
-                        }`}
-                        role="option"
-                        aria-selected={option.value === value}
-                      >
-                        {option.label}
-                      </button>
-                    ))
-                  ) : (
-                    <div className="px-4 py-3 text-sm text-muted-foreground font-elegant">
-                      No se encontraron opciones
-                    </div>
-                  )}
+        {/* Dropdown — CSS transition replaces AnimatePresence */}
+        <div
+          className="absolute top-full left-0 right-0 mt-2 max-h-64 overflow-auto z-50 transition-all duration-200 origin-top"
+          style={{
+            opacity: isOpen ? 1 : 0,
+            transform: `scaleY(${isOpen ? 1 : 0.95}) translateY(${isOpen ? '0' : '-10px'})`,
+            pointerEvents: isOpen ? 'auto' : 'none',
+          }}
+        >
+          {/* Glass Dropdown Background */}
+          <div className="bg-card/90 backdrop-blur-xl border border-border/30 rounded-lg shadow-2xl">
+            <div className="py-2">
+              {filteredOptions.length > 0 ? (
+                filteredOptions.map((option, index) => (
+                  <button
+                    key={option.value}
+                    onClick={() => handleOptionSelect(option.value)}
+                    className={`w-full px-4 py-3 text-left text-sm font-elegant transition-all duration-200 ${index === focusedIndex
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-foreground hover:bg-primary/5'
+                      } ${option.value === value
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : ''
+                      }`}
+                    role="option"
+                    aria-selected={option.value === value}
+                  >
+                    {option.label}
+                  </button>
+                ))
+              ) : (
+                <div className="px-4 py-3 text-sm text-muted-foreground font-elegant">
+                  No se encontraron opciones
                 </div>
-                
-                {/* Footer Text */}
-                {footerText && (
-                  <div className="border-t border-border/20 px-4 py-3">
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      {footerText}
-                    </p>
-                  </div>
-                )}
+              )}
+            </div>
+
+            {/* Footer Text */}
+            {footerText && (
+              <div className="border-t border-border/20 px-4 py-3">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {footerText}
+                </p>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Error Message */}
+      {/* Error Message — CSS transition */}
       {errorMessage && (
-        <motion.p
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-2 text-xs text-destructive font-elegant"
-        >
+        <p className="mt-2 text-xs text-destructive font-elegant animate-in fade-in slide-in-from-top-1">
           {errorMessage}
-        </motion.p>
+        </p>
       )}
     </div>
   );

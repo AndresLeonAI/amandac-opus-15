@@ -7,12 +7,14 @@ import { useScrollToBooking } from '@/hooks/useScrollToBooking';
 
 const SparklesCore = lazy(() => import('@/components/ui/sparkles').then(mod => ({ default: mod.SparklesCore })));
 
+const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
 const Hero = () => {
   const heroRef = useRef<HTMLElement>(null);
   const scrollToBooking = useScrollToBooking();
 
   useGSAP(() => {
-    if (!heroRef.current) return;
+    if (!heroRef.current || IS_TOUCH) return;
 
     // Create extremely fast, immutable GSAP tweeners pumping values directly to CSS Variables. 
     // This entirely bypasses React's virtual DOM diffing (Zero Layout Thrashing).

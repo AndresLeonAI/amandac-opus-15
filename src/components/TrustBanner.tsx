@@ -1,5 +1,4 @@
 import React from "react";
-import { motion } from "framer-motion";
 
 /**
  * TechLogosMarquee (centrada y perfecta)
@@ -51,25 +50,15 @@ const FALLBACKS: Record<string, string> = {
     const placeholder = `<svg xmlns='http://www.w3.org/2000/svg' width='300' height='100'><rect width='100%' height='100%' fill='transparent'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='system-ui' font-size='18'>test</text></svg>`;
     const dataUri = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(placeholder)}`;
     console.assert(dataUri.startsWith('data:image/svg+xml'), 'El placeholder debe generar un data URI válido');
-  } catch {}
+  } catch { }
 })();
 const TrustBanner = () => {
   return <section className="py-16 relative" id="confianza">
-      <div className="container mx-auto px-6">
-        <motion.h2 className="font-luxury text-3xl md:text-4xl text-center text-foreground mb-12" initial={{
-        opacity: 0,
-        y: 20
-      }} whileInView={{
-        opacity: 1,
-        y: 0
-      }} viewport={{
-        once: true
-      }} transition={{
-        duration: 0.6
-      }}>Confianza de Empresas Selectas</motion.h2>
-        <TechLogosMarquee />
-      </div>
-    </section>;
+    <div className="container mx-auto px-6">
+      <h2 className="font-luxury text-3xl md:text-4xl text-center text-foreground mb-12 fade-in">Confianza de Empresas Selectas</h2>
+      <TechLogosMarquee />
+    </div>
+  </section>;
 };
 function TechLogosMarquee({
   className,
@@ -104,34 +93,28 @@ function TechLogosMarquee({
     el.style.setProperty('--distance', `${single}px`);
   }, []);
 
-  // Re-medida al montar, al redimensionar y cuando carguen logos
+  // Re-medida al montar y al redimensionar — ResizeObserver (zero rAF)
   React.useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const remeasure = () => requestAnimationFrame(measure);
-    // medir ASAP
-    remeasure();
-    // medir al resize
-    window.addEventListener('resize', remeasure);
-    // medir al completar fonts/imágenes de la página
-    window.addEventListener('load', remeasure, {
-      once: true
-    });
-    return () => window.removeEventListener('resize', remeasure);
+    if (typeof window === 'undefined' || !trackRef.current) return;
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(trackRef.current);
+    measure(); // initial
+    window.addEventListener('load', measure, { once: true });
+    return () => ro.disconnect();
   }, [measure]);
 
   // Disparador que pasamos a cada logo (onLoad/onError)
   const onLogoReady = React.useCallback(() => {
-    // Pequeño raf para asegurar layout estable antes de medir
     if (typeof window === 'undefined') return;
-    requestAnimationFrame(measure);
+    measure();
   }, [measure]);
-  return <div className={"w-full grid place-items-center " + (className || "")}> 
-      <div className="w-full max-w-7xl mx-auto">
-        <div className="relative overflow-hidden flex items-center justify-center" style={{
+  return <div className={"w-full grid place-items-center " + (className || "")}>
+    <div className="w-full max-w-7xl mx-auto">
+      <div className="relative overflow-hidden flex items-center justify-center" style={{
         maskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
         WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)"
       } as React.CSSProperties}>
-          <div ref={trackRef} className="flex items-center will-change-transform" style={{
+        <div ref={trackRef} className="flex items-center will-change-transform" style={{
           // Variables CSS para control fino del scroll
           ['--duration' as any]: `${duration}s`,
           // En motion reducido: sin animación y centrado exacto
@@ -140,19 +123,19 @@ function TechLogosMarquee({
           transform: reduced ? 'translateX(var(--start))' : undefined,
           width: 'max-content'
         } as React.CSSProperties}>
-            {LOGOS.map((l, i) => <Logo key={`a-${i}`} src={l.src} alt={l.alt} onReady={onLogoReady} />)}
-            {LOGOS.map((l, i) => <Logo key={`b-${i}`} src={l.src} alt={l.alt} ariaHidden onReady={onLogoReady} />)}
-          </div>
+          {LOGOS.map((l, i) => <Logo key={`a-${i}`} src={l.src} alt={l.alt} onReady={onLogoReady} />)}
+          {LOGOS.map((l, i) => <Logo key={`b-${i}`} src={l.src} alt={l.alt} ariaHidden onReady={onLogoReady} />)}
         </div>
       </div>
+    </div>
 
-      <style>{`
+    <style>{`
         @keyframes scroll {
           from { transform: translateX(var(--start)); }
           to   { transform: translateX(calc(var(--start) - var(--distance))); }
         }
       `}</style>
-    </div>;
+  </div>;
 }
 function Logo({
   src,
@@ -192,8 +175,8 @@ function Logo({
   const isNvidia = alt.trim().toLowerCase() === "nvidia";
   return <img src={src} alt={alt} aria-hidden={ariaHidden} className={"h-12 md:h-16 lg:h-20 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" + (isNvidia ? " filter brightness-0 invert" : "")} loading="lazy" onLoad={onReady} onError={handleError} referrerPolicy="no-referrer" crossOrigin="anonymous"
   /* Refuerzo de compatibilidad en navegadores sin utilidades CSS */ style={isNvidia ? {
-    filter: "brightness(0) invert(1)"
-  } : undefined} />;
+      filter: "brightness(0) invert(1)"
+    } : undefined} />;
 }
 
 // --- Tests adicionales no intrusivos ---
@@ -206,6 +189,6 @@ function Logo({
     // Lógica de normalización de alt para la regla CSS
     const alt = "  NVIDIA  ";
     console.assert(alt.trim().toLowerCase() === "nvidia", "La normalización de alt para NVIDIA debe coincidir");
-  } catch {}
+  } catch { }
 })();
 export default TrustBanner;

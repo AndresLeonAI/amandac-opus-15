@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -10,16 +12,36 @@ import { TiltCard } from "@/components/TiltCard";
 import { Helmet } from "react-helmet-async";
 import WebGLShaderOceanLight from "@/components/ui/WebGLShaderOceanLight";
 
-// Order: most recent to oldest / most representative first
+gsap.registerPlugin(ScrollTrigger);
+
 const orderedAwards = [
-  awards[3], // UFC Convención Santa Marta 2024
-  awards[0], // UFC Mejor Asesor Financiero 2022
-  awards[1], // UFC Mejor Asesor Primer Trimestre
-  awards[2], // UFC Mención de Oro Ventas Q2
-  awards[4], // AXIA Diploma de Reconocimiento
+  awards[3],
+  awards[0],
+  awards[1],
+  awards[2],
+  awards[4],
 ];
 
 const Awards = () => {
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (!mainRef.current) return;
+    // Hero reveal
+    gsap.from(mainRef.current.querySelector('.awards-hero'), {
+      opacity: 0, y: 30, duration: 0.6, ease: 'power2.out',
+    });
+    // Stagger card reveals
+    gsap.from(mainRef.current.querySelectorAll('.award-card'), {
+      opacity: 0, y: 30, duration: 0.6, stagger: 0.1, ease: 'power2.out',
+      scrollTrigger: {
+        trigger: mainRef.current.querySelector('.awards-grid'),
+        start: 'top 85%',
+        toggleActions: 'play none none none',
+      },
+    });
+  }, { scope: mainRef });
+
   return (
     <>
       <Helmet>
@@ -42,52 +64,38 @@ const Awards = () => {
         </script>
       </Helmet>
 
-      <div className="min-h-screen">
-        {/* WebGL Ocean Background - Fixed behind content, not in hero */}
+      <div className="min-h-screen" ref={mainRef}>
         <WebGLShaderOceanLight className="pointer-events-none fixed inset-0 z-0" />
-        
+
         <Header />
-        
+
         <main className="pt-24">
-          {/* Hero Section */}
           <section className="py-16 bg-gradient-to-b from-background to-background/80">
             <div className="container mx-auto px-6">
-              <motion.div 
-                className="text-center max-w-4xl mx-auto"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
+              <div className="awards-hero text-center max-w-4xl mx-auto">
                 <h1 className="font-luxury text-4xl md:text-6xl text-primary mb-6">
-                  Premios y 
+                  Premios y
                   <span className="text-foreground"> Reconocimientos</span>
                 </h1>
                 <p className="font-elegant text-muted-foreground text-lg max-w-2xl mx-auto">
                   Una trayectoria avalada por terceros. Estándares auditados, resultados verificables y servicio ejecutivo.
                 </p>
-              </motion.div>
+              </div>
             </div>
           </section>
 
-          {/* Awards Grid */}
           <section className="py-16">
             <div className="container mx-auto px-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              <div className="awards-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
                 {orderedAwards.map((award, index) => (
-                  <motion.div
-                    key={award.slug}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                  >
+                  <div key={award.slug} className="award-card">
                     <TiltCard className="h-full" intensity={8}>
-                      <Link 
+                      <Link
                         to={award.link}
                         className="block h-full p-6 hover:scale-102 transition-all duration-300"
                         data-analytics="premios_index_card_click"
                         data-award={award.slug}
                       >
-                        {/* Award Image */}
                         <div className="relative mb-6 rounded-lg overflow-hidden">
                           <img
                             src={award.thumbnail}
@@ -96,24 +104,18 @@ const Awards = () => {
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                         </div>
-
-                        {/* Badge */}
                         <Badge variant="secondary" className="mb-3 font-luxury">
                           {award.badge}
                         </Badge>
-
-                        {/* Title */}
                         <h3 className="font-luxury text-xl text-primary mb-3 leading-tight">
                           {award.officialTitle}
                         </h3>
-
-                        {/* Summary */}
                         <p className="font-elegant text-muted-foreground text-sm leading-relaxed">
                           {award.description.split('.')[0]}.
                         </p>
                       </Link>
                     </TiltCard>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>

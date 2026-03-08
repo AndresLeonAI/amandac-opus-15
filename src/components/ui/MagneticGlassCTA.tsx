@@ -1,7 +1,8 @@
 import React, { useRef } from 'react';
-import { motion } from 'framer-motion';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+
+const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 
 interface MagneticGlassCTAProps {
     onClick: () => void;
@@ -14,7 +15,7 @@ const MagneticGlassCTA: React.FC<MagneticGlassCTAProps> = ({ onClick, text, aria
     const buttonRef = useRef<HTMLButtonElement>(null);
 
     useGSAP(() => {
-        if (!containerRef.current || !buttonRef.current) return;
+        if (!containerRef.current || !buttonRef.current || IS_TOUCH) return;
 
         const xTo = gsap.quickTo(buttonRef.current, "x", { duration: 0.6, ease: "elastic.out(1, 0.3)" });
         const yTo = gsap.quickTo(buttonRef.current, "y", { duration: 0.6, ease: "elastic.out(1, 0.3)" });

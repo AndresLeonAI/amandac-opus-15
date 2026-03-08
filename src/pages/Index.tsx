@@ -1,5 +1,5 @@
-import React, { useEffect, useState, Suspense, lazy } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState, useRef, Suspense, lazy } from 'react';
+import gsap from 'gsap';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import ManifestoSection from '@/components/ManifestoSection';
@@ -19,14 +19,26 @@ import LuxuryDollarLoader from '@/components/LuxuryDollarLoader';
 
 const Index = () => {
   const [booting, setBooting] = useState(true);
+  const loaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setBooting(false), 5000); // 5s exactos para un loader verdaderamente elegante y lento
+    const t = setTimeout(() => {
+      // GSAP fadeout replaces AnimatePresence exit
+      if (loaderRef.current) {
+        gsap.to(loaderRef.current, {
+          opacity: 0,
+          duration: 0.45,
+          ease: 'power2.out',
+          onComplete: () => setBooting(false),
+        });
+      } else {
+        setBooting(false);
+      }
+    }, 5000);
     return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
-    // Initialize scroll animations
     const observeElements = () => {
       const elements = document.querySelectorAll('.fade-in');
       const observer = new IntersectionObserver(entries => {
@@ -43,7 +55,6 @@ const Index = () => {
     };
     observeElements();
 
-    // Smooth scrolling for anchor links
     const handleSmoothScroll = (e: Event) => {
       const target = e.target as HTMLAnchorElement;
       if (target.hash) {
@@ -61,14 +72,15 @@ const Index = () => {
       document.removeEventListener('click', handleSmoothScroll);
     };
   }, []);
+
   return (
     <>
-      {/* WebGL detrás pero visible, carga diferida quirúrgica */}
+      {/* WebGL background — lazy loaded */}
       <Suspense fallback={null}>
         <WebGLShaderOceanLight className="pointer-events-none fixed inset-0 z-0" />
       </Suspense>
 
-      {/* Contenido principal */}
+      {/* Main content */}
       <div className="cursor-glow relative z-10">
         <Header />
         <main>
@@ -94,20 +106,15 @@ const Index = () => {
         <Footer />
       </div>
 
-      {/* Preloader sobre todo y con fade-out suave */}
-      <AnimatePresence>
-        {booting && (
-          <motion.div
-            className="fixed inset-0 z-50"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.45, ease: "easeOut" }}
-          >
-            <LuxuryDollarLoader />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Preloader — GSAP timeline replaces AnimatePresence */}
+      {booting && (
+        <div
+          ref={loaderRef}
+          className="fixed inset-0 z-50"
+        >
+          <LuxuryDollarLoader />
+        </div>
+      )}
     </>
   );
 };

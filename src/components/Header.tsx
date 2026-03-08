@@ -1,38 +1,49 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
+import gsap from 'gsap';
 import { useScrollToBooking } from '@/hooks/useScrollToBooking';
 
 const Header = () => {
-  const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const prevScrollRef = useRef(0);
   const scrollToBooking = useScrollToBooking();
 
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    const previous = scrollY.getPrevious() ?? 0;
+  // Replace useScroll/useMotionValueEvent with efficient passive scroll listener
+  useEffect(() => {
+    const onScroll = () => {
+      const latest = window.scrollY;
+      const previous = prevScrollRef.current;
 
-    // Show/Hide logic
-    if (latest > previous && latest > 150) {
-      setHidden(true); // Hide on scroll down
-    } else {
-      setHidden(false); // Show on scroll up
-    }
+      if (latest > previous && latest > 150) {
+        setHidden(true);
+      } else {
+        setHidden(false);
+      }
+      setScrolled(latest > 50);
+      prevScrollRef.current = latest;
+    };
 
-    // Background logic
-    setScrolled(latest > 50);
-  });
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // GSAP-driven hide/show animation (replaces motion.header animate)
+  useEffect(() => {
+    if (!headerRef.current) return;
+    gsap.to(headerRef.current, {
+      y: hidden ? '-100%' : '0%',
+      duration: 0.35,
+      ease: 'power2.inOut',
+    });
+  }, [hidden]);
 
   return (
-    <motion.header
-      variants={{
-        visible: { y: 0 },
-        hidden: { y: "-100%" },
-      }}
-      animate={hidden ? "hidden" : "visible"}
-      transition={{ duration: 0.35, ease: "easeInOut" }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-500`}
+    <header
+      ref={headerRef}
+      className="fixed top-0 left-0 right-0 z-50 transition-colors duration-500"
     >
       {/* Glassmorphism Background Container */}
       <div className={`absolute inset-0 transition-all duration-700 ${scrolled
@@ -53,7 +64,6 @@ const Header = () => {
           <nav className="hidden md:flex items-center space-x-10">
             {['Servicios', 'Proceso', 'Premios', 'Blog', 'Testimonios'].map((item) => {
               const href = item === 'Premios' ? '/premios' : item === 'Blog' ? '/blog' : `/#${item.toLowerCase().replace(' ', '-')}`;
-              // Special mapping for anchors if needed, for now simple lowercase
               const finalHref = item === 'Servicios' ? '/#asesoria-estrategia' :
                 item === 'Proceso' ? '/#proceso-meticuloso' :
                   item === 'Testimonios' ? '/#testimonios' : href;
@@ -77,7 +87,7 @@ const Header = () => {
           </Button>
         </div>
       </div>
-    </motion.header>
+    </header>
   );
 };
 

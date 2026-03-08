@@ -1,20 +1,41 @@
 import * as React from "react"
-import { motion, HTMLMotionProps } from "framer-motion"
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useGSAP } from '@gsap/react'
 import { useTiltEffect } from "@/hooks/use-tilt-effect"
 import { cn } from "@/lib/utils"
 
-interface CardProps extends Omit<HTMLMotionProps<"div">, "onDrag" | "onDragStart" | "onDragEnd"> {
+gsap.registerPlugin(ScrollTrigger)
+
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   enableTilt?: boolean;
   tiltIntensity?: number;
 }
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, enableTilt = true, tiltIntensity = 8, ...props }, ref) => {
+  ({ className, enableTilt = true, tiltIntensity = 8, children, ...props }, ref) => {
     const tiltRef = useTiltEffect(tiltIntensity);
-    
+    const cardRef = React.useRef<HTMLDivElement>(null);
+
+    // GSAP scroll reveal replacing motion whileInView
+    useGSAP(() => {
+      if (!cardRef.current) return;
+      gsap.from(cardRef.current, {
+        opacity: 0, y: 20, duration: 0.6,
+        ease: 'power2.out',
+        delay: Math.random() * 0.2,
+        scrollTrigger: {
+          trigger: cardRef.current,
+          start: 'top 90%',
+          toggleActions: 'play none none none',
+        },
+      });
+    }, { scope: cardRef });
+
     return (
-      <motion.div
+      <div
         ref={(el) => {
+          cardRef.current = el;
           if (enableTilt) {
             tiltRef.current = el;
           }
@@ -23,14 +44,6 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
           } else if (ref) {
             ref.current = el;
           }
-        }}
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.3 }}
-        transition={{ 
-          duration: 0.6, 
-          ease: [0.25, 0.1, 0.25, 1],
-          delay: Math.random() * 0.2 
         }}
         className={cn(
           "group relative overflow-hidden rounded-xl border bg-card/80 text-card-foreground shadow-elegant backdrop-blur-sm transition-all duration-500 hover:shadow-glow hover:-translate-y-1",
@@ -55,13 +68,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
               <div
                 className="absolute inset-0 rounded-xl"
                 style={{
-                  background: `
-                    radial-gradient(
-                      600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-                      hsla(var(--primary), 0.1),
-                      transparent 40%
-                    )
-                  `,
+                  background: `radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), hsla(var(--primary), 0.1), transparent 40%)`,
                 }}
               />
             </div>
@@ -69,20 +76,14 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
               <div
                 className="absolute inset-0 rounded-xl"
                 style={{
-                  background: `
-                    radial-gradient(
-                      300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-                      rgba(255, 255, 255, 0.1),
-                      transparent 40%
-                    )
-                  `,
+                  background: `radial-gradient(300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.1), transparent 40%)`,
                 }}
               />
             </div>
           </>
         )}
-        {props.children as React.ReactNode}
-      </motion.div>
+        {children}
+      </div>
     );
   }
 )

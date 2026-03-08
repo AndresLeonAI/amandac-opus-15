@@ -1,13 +1,29 @@
 import { useState, useEffect, useRef } from 'react';
 import Cal, { getCalApi } from "@calcom/embed-react";
-import { motion, useInView } from "framer-motion";
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 import { SparklesCore } from './ui/sparkles';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const SantuarioDelTiempo = () => {
     const containerRef = useRef<HTMLElement>(null);
-    const isInView = useInView(containerRef, { once: true, margin: "200px" });
+    const [isInView, setIsInView] = useState(false);
     const [isCalLoaded, setIsCalLoaded] = useState(false);
 
+    // IntersectionObserver for lazy-loading Cal.com (replaces framer useInView)
+    useEffect(() => {
+        if (!containerRef.current) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => { if (entry.isIntersecting) { setIsInView(true); observer.disconnect(); } },
+            { rootMargin: '200px' }
+        );
+        observer.observe(containerRef.current);
+        return () => observer.disconnect();
+    }, []);
+
+    // Cal.com initialization
     useEffect(() => {
         if (isInView) {
             (async function () {
@@ -22,6 +38,26 @@ const SantuarioDelTiempo = () => {
             })();
         }
     }, [isInView]);
+
+    // GSAP ScrollTrigger reveals (replaces motion.div whileInView)
+    useGSAP(() => {
+        if (!containerRef.current) return;
+        const reveals = containerRef.current.querySelectorAll('.gs-reveal');
+        reveals.forEach((el, i) => {
+            gsap.from(el, {
+                opacity: 0,
+                y: 20,
+                duration: 0.8,
+                ease: 'expo.out',
+                delay: i * 0.1,
+                scrollTrigger: {
+                    trigger: el,
+                    start: 'top 85%',
+                    toggleActions: 'play none none none',
+                },
+            });
+        });
+    }, { scope: containerRef });
 
     return (
         <section
@@ -45,42 +81,20 @@ const SantuarioDelTiempo = () => {
 
             <div className="container relative z-10 mx-auto px-4 sm:px-6">
                 <div className="max-w-4xl mx-auto text-center mb-16">
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                        className="text-primary tracking-widest uppercase text-sm font-semibold mb-4"
-                    >
+                    <p className="gs-reveal text-primary tracking-widest uppercase text-sm font-semibold mb-4">
                         Santuario del Tiempo
-                    </motion.p>
-                    <motion.h2
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                        className="text-4xl md:text-5xl font-luxury text-foreground mb-6"
-                    >
+                    </p>
+                    <h2 className="gs-reveal text-4xl md:text-5xl font-luxury text-foreground mb-6">
                         Tu Legado Comienza Aquí
-                    </motion.h2>
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                        className="text-foreground/60 text-lg md:text-xl font-light"
-                    >
+                    </h2>
+                    <p className="gs-reveal text-foreground/60 text-lg md:text-xl font-light">
                         Reserva un espacio privado para diseñar la arquitectura de tu futuro financiero.
-                    </motion.p>
+                    </p>
                 </div>
 
                 {/* Vault Glassmorphic Container for Cal.com */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 40 }}
-                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="relative max-w-5xl mx-auto rounded-3xl overflow-hidden shadow-[0_0_80px_rgba(212,175,55,0.05)] border border-primary/10 bg-black/40 backdrop-blur-3xl"
+                <div
+                    className="gs-reveal relative max-w-5xl mx-auto rounded-3xl overflow-hidden shadow-[0_0_80px_rgba(212,175,55,0.05)] border border-primary/10 bg-black/40 backdrop-blur-3xl"
                 >
                     {/* Subtle top glare */}
                     <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
@@ -104,7 +118,7 @@ const SantuarioDelTiempo = () => {
                             </div>
                         )}
                     </div>
-                </motion.div>
+                </div>
             </div>
         </section>
     );

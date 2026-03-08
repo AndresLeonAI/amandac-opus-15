@@ -1,8 +1,12 @@
-import React from 'react';
-import { motion, HTMLMotionProps, Variants } from 'framer-motion';
+import React, { useRef } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 import { cn } from '@/lib/utils';
 
-interface ScrollRevealProps extends HTMLMotionProps<"div"> {
+gsap.registerPlugin(ScrollTrigger);
+
+interface ScrollRevealProps {
   children: React.ReactNode;
   className?: string;
   delay?: number;
@@ -22,61 +26,53 @@ export const ScrollReveal = ({
   stagger = false,
   ...props
 }: ScrollRevealProps) => {
-  const getInitialPosition = () => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (!ref.current) return;
+
+    const fromVars: gsap.TweenVars = {
+      opacity: 0,
+      duration: 0.8,
+      ease: 'power2.out',
+      delay,
+    };
+
     switch (direction) {
-      case 'up':
-        return { y: distance, opacity: 0 };
-      case 'down':
-        return { y: -distance, opacity: 0 };
-      case 'left':
-        return { x: distance, opacity: 0 };
-      case 'right':
-        return { x: -distance, opacity: 0 };
-      default:
-        return { y: distance, opacity: 0 };
+      case 'up': fromVars.y = distance; break;
+      case 'down': fromVars.y = -distance; break;
+      case 'left': fromVars.x = distance; break;
+      case 'right': fromVars.x = -distance; break;
     }
-  };
 
-  const baseVariants: Variants = {
-    hidden: {
-      ...getInitialPosition(),
-      ...(scale && { scale: 0.8 }),
-    },
-    visible: {
-      x: 0,
-      y: 0,
-      opacity: 1,
-      ...(scale && { scale: 1 }),
-      transition: {
-        duration: 0.8,
-        ease: [0.25, 0.1, 0.25, 1] as const,
-        delay: stagger ? delay : delay,
-      },
-    },
-  };
+    if (scale) fromVars.scale = 0.8;
 
-  const staggerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: delay,
-      },
-    },
-  };
+    if (stagger) {
+      gsap.from(ref.current.children, {
+        ...fromVars,
+        stagger: 0.1,
+        scrollTrigger: {
+          trigger: ref.current,
+          start: 'top 85%',
+          toggleActions: 'play none none none',
+        },
+      });
+    } else {
+      gsap.from(ref.current, {
+        ...fromVars,
+        scrollTrigger: {
+          trigger: ref.current,
+          start: 'top 85%',
+          toggleActions: 'play none none none',
+        },
+      });
+    }
+  }, { scope: ref });
 
   return (
-    <motion.div
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.3 }}
-      variants={stagger ? staggerVariants : baseVariants}
-      className={cn("", className)}
-      {...props}
-    >
+    <div ref={ref} className={cn('', className)} {...props}>
       {children}
-    </motion.div>
+    </div>
   );
 };
 

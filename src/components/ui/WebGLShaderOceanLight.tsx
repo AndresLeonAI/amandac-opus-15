@@ -17,6 +17,7 @@
 
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
+import gsap from "gsap";
 
 /** Public props to integrate easily in Lovable */
 export interface WebGLShaderOceanLightProps {
@@ -63,7 +64,6 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
       bgColorBottom: { value: THREE.Color };
       speed: { value: number };
     } | null;
-    animationId: number | null;
     isRunning: boolean;
   }>({
     scene: null,
@@ -71,7 +71,6 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
     renderer: null,
     mesh: null,
     uniforms: null,
-    animationId: null,
     isRunning: true,
   });
 
@@ -212,17 +211,13 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
       handleResize();
     };
 
-    /** Animation loop with pause on hidden tab to save resources */
-    const animate = () => {
-      if (!refs.isRunning || document.hidden) {
-        refs.animationId = requestAnimationFrame(animate);
-        return;
-      }
+    /** Render function — subordinated to gsap.ticker (monolithic heartbeat) */
+    const render = () => {
+      if (!refs.isRunning || document.hidden) return;
       if (refs.uniforms) refs.uniforms.time.value += 0.01;
       if (refs.renderer && refs.scene && refs.camera) {
         refs.renderer.render(refs.scene, refs.camera);
       }
-      refs.animationId = requestAnimationFrame(animate);
     };
 
     /** Keep canvas and uniforms in sync with the window size (debounced) */
@@ -246,14 +241,14 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
     };
 
     initScene();
-    animate();
+    gsap.ticker.add(render);
     window.addEventListener("resize", handleResize, { passive: true });
     document.addEventListener("visibilitychange", handleVisibility, { passive: true });
 
     /** Thorough cleanup on unmount (Elite Performance Refactor) */
     return () => {
       observer.disconnect();
-      if (refs.animationId) cancelAnimationFrame(refs.animationId);
+      gsap.ticker.remove(render);
       window.removeEventListener("resize", handleResize);
       document.removeEventListener("visibilitychange", handleVisibility);
 

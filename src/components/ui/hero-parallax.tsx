@@ -12,6 +12,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
 
 
 /* ═══════════════════════════════════════════════════════════════
@@ -153,7 +155,7 @@ export const HeroParallax: React.FC<HeroParallaxProps> = ({ products }) => {
 
     const hook = hookRef.current;
 
-    if (!hook) return;
+    if (!hook || IS_TOUCH) return;
 
 
 
