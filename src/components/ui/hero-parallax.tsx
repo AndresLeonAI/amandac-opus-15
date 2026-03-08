@@ -627,6 +627,7 @@ export const HeroParallax: React.FC<HeroParallaxProps> = ({ products }) => {
                     className="w-full h-full object-cover object-center scale-105 transition-transform duration-[2s] hover:scale-110"
 
                     loading={i < 2 ? "eager" : "lazy"}
+                    fetchPriority={i < 2 ? "high" : undefined}
 
                   />
 

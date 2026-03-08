@@ -586,3 +586,37 @@
     --angle: 360deg;
   }
 }
+
+/* ─────────────────────────────────────────────────────────
+   ESCUDO TÉRMICO MÓVIL: GLASSMORPHISM PURGE
+   Desactiva backdrop-filter en ARM GPUs (≤768px) y sustituye
+   con fondos opacos de Alta Costura Digital. Desktop intacto.
+   ───────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Core glass-card override */
+  .glass-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: hsl(220 30% 10% / 0.95) !important;
+  }
+
+  /* Tailwind backdrop-blur-* utility override */
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .backdrop-blur-3xl,
+  .backdrop-blur-\[24px\],
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Explicit style-level override for inline backdrop-filter */
+  [style*="backdrop-filter"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}

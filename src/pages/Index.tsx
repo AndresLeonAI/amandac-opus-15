@@ -6,16 +6,26 @@ import ManifestoSection from '@/components/ManifestoSection';
 import AboutAmanda from '@/components/AboutAmanda';
 import Services from '@/components/Services';
 import TrustBanner from '@/components/TrustBanner';
-import KPIs from '@/components/KPIs';
-import Process from '@/components/Process';
-import Testimonials from '@/components/Testimonials';
-import FAQ from '@/components/FAQ';
-const SantuarioDelTiempo = lazy(() => import('@/components/SantuarioDelTiempo'));
-import CTASection from '@/components/CTASection';
-import GlobalFinancesCard from '@/components/GlobalFinancesCard';
-import Footer from '@/components/Footer';
-const WebGLShaderOceanLight = lazy(() => import('@/components/ui/WebGLShaderOceanLight'));
 import LuxuryDollarLoader from '@/components/LuxuryDollarLoader';
+
+// Below-fold: React.lazy for asymmetric hydration (TTI optimization)
+const KPIs = lazy(() => import('@/components/KPIs'));
+const Process = lazy(() => import('@/components/Process'));
+const GlobalFinancesCard = lazy(() => import('@/components/GlobalFinancesCard'));
+const Testimonials = lazy(() => import('@/components/Testimonials'));
+const FAQ = lazy(() => import('@/components/FAQ'));
+const SantuarioDelTiempo = lazy(() => import('@/components/SantuarioDelTiempo'));
+const CTASection = lazy(() => import('@/components/CTASection'));
+const Footer = lazy(() => import('@/components/Footer'));
+const WebGLShaderOceanLight = lazy(() => import('@/components/ui/WebGLShaderOceanLight'));
+
+/* CLS-safe skeleton: approximates real component height on mobile/desktop */
+const Skeleton = ({ mobileH, desktopH }: { mobileH: string; desktopH: string }) => (
+  <div
+    className="w-full bg-white/[0.02] animate-pulse rounded-xl"
+    style={{ minHeight: `clamp(${mobileH}, 50vw, ${desktopH})` }}
+  />
+);
 
 const Index = () => {
   const [booting, setBooting] = useState(true);
@@ -23,7 +33,6 @@ const Index = () => {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      // GSAP fadeout replaces AnimatePresence exit
       if (loaderRef.current) {
         gsap.to(loaderRef.current, {
           opacity: 0,
@@ -84,26 +93,51 @@ const Index = () => {
       <div className="cursor-glow relative z-10">
         <Header />
         <main>
+          {/* Above the fold — eagerly loaded */}
           <Hero />
           <ManifestoSection />
           <AboutAmanda />
           <Services />
+
           <section id="trust-section" className="py-16">
             <div className="container mx-auto px-6">
               <TrustBanner />
             </div>
           </section>
-          <KPIs />
-          <Process />
-          <GlobalFinancesCard />
-          <Testimonials />
-          <FAQ />
-          <Suspense fallback={null}>
+
+          {/* Below the fold — code-split with CLS-safe skeletons */}
+          <Suspense fallback={<Skeleton mobileH="400px" desktopH="500px" />}>
+            <KPIs />
+          </Suspense>
+
+          <Suspense fallback={<Skeleton mobileH="900px" desktopH="700px" />}>
+            <Process />
+          </Suspense>
+
+          <Suspense fallback={<Skeleton mobileH="1200px" desktopH="800px" />}>
+            <GlobalFinancesCard />
+          </Suspense>
+
+          <Suspense fallback={<Skeleton mobileH="600px" desktopH="500px" />}>
+            <Testimonials />
+          </Suspense>
+
+          <Suspense fallback={<Skeleton mobileH="500px" desktopH="400px" />}>
+            <FAQ />
+          </Suspense>
+
+          <Suspense fallback={<Skeleton mobileH="700px" desktopH="600px" />}>
             <SantuarioDelTiempo />
           </Suspense>
-          <CTASection />
+
+          <Suspense fallback={<Skeleton mobileH="300px" desktopH="250px" />}>
+            <CTASection />
+          </Suspense>
         </main>
-        <Footer />
+
+        <Suspense fallback={<Skeleton mobileH="200px" desktopH="180px" />}>
+          <Footer />
+        </Suspense>
       </div>
 
       {/* Preloader — GSAP timeline replaces AnimatePresence */}
