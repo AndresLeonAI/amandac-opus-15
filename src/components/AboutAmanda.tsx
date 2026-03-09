@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback, useSyncExternalStore, useLayoutEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -9,59 +9,34 @@ gsap.registerPlugin(ScrollTrigger);
 const SILK: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94];
 const EXPO_OUT: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
-const useMediaQuery = (query: string): boolean => {
-  const subscribe = useCallback((cb: () => void) => { const mql = window.matchMedia(query); mql.addEventListener('change', cb); return () => mql.removeEventListener('change', cb); }, [query]);
-  const getSnapshot = () => window.matchMedia(query).matches;
-  const getServerSnapshot = () => false;
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-};
-
 const NOISE_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n' x='0' y='0'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='300' height='300' filter='url(#n)' opacity='1'/></svg>`;
 const noiseDataUri = `url("data:image/svg+xml,${encodeURIComponent(NOISE_SVG)}")`;
 
-/* ── AnimatedCounter (GSAP) ── */
+/* ── AnimatedCounter (Dumb Component) ── */
 const AnimatedCounter = ({ target, suffix = '', duration = 2 }: { target: number; suffix?: string; duration?: number }) => {
-  const ref = useRef<HTMLSpanElement>(null);
-  const [display, setDisplay] = useState(0);
-  useGSAP(() => {
-    if (!ref.current) return;
-    const proxy = { val: 0 };
-    gsap.to(proxy, { val: target, duration, ease: 'power2.out', onUpdate: () => setDisplay(Math.round(proxy.val)), scrollTrigger: { trigger: ref.current, start: 'top 90%', toggleActions: 'play none none none' } });
-  }, { scope: ref });
   return (
-    <span ref={ref} className="font-luxury text-5xl md:text-7xl tabular-nums not-italic bg-gradient-to-b from-white via-white/90 to-white/60 bg-clip-text text-transparent">
-      {display}{suffix && <span className="text-primary">{suffix}</span>}
+    <span className="js-animated-counter font-luxury text-5xl md:text-7xl tabular-nums not-italic bg-gradient-to-b from-white via-white/90 to-white/60 bg-clip-text text-transparent" data-target={target} data-duration={duration}>
+      <span className="js-counter-val">0</span>{suffix && <span className="text-primary">{suffix}</span>}
     </span>
   );
 };
 
-/* ── TitleReveal (GSAP ScrollTrigger) ── */
+/* ── TitleReveal (Dumb Component) ── */
 const TitleReveal = ({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  useGSAP(() => {
-    if (!ref.current) return;
-    gsap.from(ref.current, { y: '110%', duration: 0.9, delay, ease: 'expo.out', scrollTrigger: { trigger: ref.current, start: 'top 90%', toggleActions: 'play none none none' } });
-  }, { scope: ref });
-  return <div className={`overflow-hidden ${className}`}><div ref={ref}>{children}</div></div>;
+  return <div className={`overflow-hidden js-title-reveal-container ${className}`}><div className="js-title-reveal translate-y-[110%]" data-delay={delay}>{children}</div></div>;
 };
 
-/* ── WordStagger (GSAP ScrollTrigger) ── */
+/* ── WordStagger (Dumb Component) ── */
 const WordStagger = ({ text, className = '' }: { text: string; className?: string }) => {
-  const ref = useRef<HTMLParagraphElement>(null);
   const words = text.split(' ');
-  useGSAP(() => {
-    if (!ref.current) return;
-    const spans = ref.current.querySelectorAll('.word-inner');
-    gsap.from(spans, { y: '100%', opacity: 0, duration: 0.5, ease: 'expo.out', stagger: 0.025, scrollTrigger: { trigger: ref.current, start: 'top 90%', toggleActions: 'play none none none' } });
-  }, { scope: ref });
   return (
-    <p ref={ref} className={className}>
-      {words.map((word, i) => (<span key={i} className="inline-block overflow-hidden mr-[0.3em]"><span className="word-inner inline-block">{word}</span></span>))}
+    <p className={`js-word-stagger ${className}`}>
+      {words.map((word, i) => (<span key={i} className="inline-block overflow-hidden mr-[0.3em]"><span className="word-inner inline-block translate-y-[100%] opacity-0">{word}</span></span>))}
     </p>
   );
 };
 
-/* ── SpotlightCard (CSS custom properties replace useMotionValue) ── */
+/* ── SpotlightCard (Dumb Component) ── */
 const SpotlightCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const handleMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -98,21 +73,12 @@ const SECTIONS = [
 
 const GRADIENT_TEXT = 'bg-gradient-to-b from-white via-white/90 to-white/65 bg-clip-text text-transparent';
 
-/* ── NarrativeBlock (GSAP) ── */
-const NarrativeBlock = ({ section, index, isDesktop }: { section: (typeof SECTIONS)[number]; index: number; isDesktop: boolean }) => {
-  const ref = useRef<HTMLDivElement>(null);
+/* ── NarrativeBlock (Dumb Component) ── */
+const NarrativeBlock = ({ section, index, className = '' }: { section: (typeof SECTIONS)[number]; index: number; className?: string; }) => {
   const hasStat = 'stat' in section && section.stat;
-
-  useGSAP(() => {
-    if (!ref.current) return;
-    if (!isDesktop) {
-      gsap.from(ref.current, { opacity: 0, y: 30, duration: 0.8, ease: 'power2.out', scrollTrigger: { trigger: ref.current, start: 'top 90%', toggleActions: 'play none none none' } });
-    }
-  }, { scope: ref, dependencies: [isDesktop] });
-
   return (
-    <div ref={ref} className="about-narrative-block py-10 md:py-16 will-change-transform" data-index={index}>
-      {hasStat && (
+    <div className={`js-narrative-block about-narrative-block py-10 md:py-16 will-change-transform opacity-0 invisible translate-y-[30px] ${className}`} data-index={index}>
+      {hasStat && section.stat && (
         <div className="mb-6">
           <AnimatedCounter target={section.stat.value} suffix={section.stat.suffix} duration={2.2} />
           <p className="mt-2 text-sm uppercase tracking-[0.25em] text-white/30 font-elegant">{section.stat.label}</p>
@@ -132,103 +98,201 @@ const NarrativeBlock = ({ section, index, isDesktop }: { section: (typeof SECTIO
 };
 
 /* ══════════════════════════════════════════════════════
-   AboutAmanda — Pure GSAP
+   AboutAmanda — Monolithic GSAP Orchestration
    ══════════════════════════════════════════════════════ */
 const AboutAmanda = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const leftColRef = useRef<HTMLDivElement>(null);
-  const imageWrapRef = useRef<HTMLDivElement>(null);
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
-  // Scroll-driven narrative highlighting (desktop only)
-  useLayoutEffect(() => {
-    if (!isDesktop || !containerRef.current || !leftColRef.current) return;
-    const ctx = gsap.context(() => {
-      const blocks = leftColRef.current!.querySelectorAll('.about-narrative-block');
-      const progressFill = leftColRef.current!.querySelector('.about-progress-fill') as HTMLElement;
-      const progressDot = leftColRef.current!.querySelector('.about-progress-dot') as HTMLElement;
+  useGSAP(() => {
+    if (!containerRef.current) return;
 
-      ScrollTrigger.create({
-        trigger: containerRef.current,
-        start: 'top top', end: 'bottom bottom', scrub: 2,
-        onUpdate: (self) => {
-          const p = self.progress;
-          if (progressFill) progressFill.style.height = `${p * 100}%`;
-          if (progressDot) progressDot.style.top = `${p * 100}%`;
+    // 1. Initial Reveal setup for common elements (Shared logic)
+    const counters = gsap.utils.toArray('.js-animated-counter') as HTMLElement[];
+    counters.forEach((el) => {
+      const target = parseFloat(el.getAttribute('data-target') || '0');
+      const duration = parseFloat(el.getAttribute('data-duration') || '2');
+      const valEl = el.querySelector('.js-counter-val');
+      if (valEl) {
+        const proxy = { val: 0 };
+        gsap.to(proxy, {
+          val: target,
+          duration,
+          ease: 'power2.out',
+          scrollTrigger: { trigger: el, start: 'top 90%', toggleActions: 'play none none none' },
+          onUpdate: () => { valEl.innerHTML = String(Math.round(proxy.val)); }
+        });
+      }
+    });
 
-          blocks.forEach((el, i) => {
-            const rangeStart = i * 0.25;
-            const rangeEnd = (i + 1) * 0.25;
-            const fadeIn = Math.max(0, rangeStart - 0.08);
-            const fadeOut = Math.min(1, rangeEnd + 0.08);
-            let op = 0.12, sc = 0.98, tx = -6;
-            if (p >= rangeStart && p <= rangeEnd) { op = 1; sc = 1.02; tx = 0; }
-            else if (p >= fadeIn && p < rangeStart) {
-              const t = gsap.utils.mapRange(fadeIn, rangeStart, 0, 1, p);
-              op = gsap.utils.interpolate(0.12, 1, t); sc = gsap.utils.interpolate(0.98, 1.02, t); tx = gsap.utils.interpolate(-6, 0, t);
-            } else if (p > rangeEnd && p <= fadeOut) {
-              const t = gsap.utils.mapRange(rangeEnd, fadeOut, 0, 1, p);
-              op = gsap.utils.interpolate(1, 0.12, t); sc = gsap.utils.interpolate(1.02, 0.98, t); tx = gsap.utils.interpolate(0, -6, t);
-            }
-            (el as HTMLElement).style.opacity = String(op);
-            (el as HTMLElement).style.transform = `scale(${sc}) translateX(${tx}px)`;
-          });
-        },
+    const wordStaggers = gsap.utils.toArray('.js-word-stagger') as HTMLElement[];
+    wordStaggers.forEach((el) => {
+      const spans = el.querySelectorAll('.word-inner');
+      gsap.to(spans, {
+        y: '0%', opacity: 1, duration: 0.5, ease: 'expo.out', stagger: 0.025,
+        scrollTrigger: { trigger: el, start: 'top 90%', toggleActions: 'play none none none' }
       });
-    }, containerRef);
-    return () => ctx.revert();
-  }, [isDesktop]);
+    });
 
-  // Image parallax + reveals
-  useGSAP(() => {
-    if (!imageWrapRef.current || !containerRef.current) return;
-    // Image entrance
-    gsap.from(imageWrapRef.current.querySelector('.about-image-outer'), { opacity: 0, x: 40, scale: 0.96, duration: 0.9, ease: 'power2.out', scrollTrigger: { trigger: imageWrapRef.current, start: 'top 80%', toggleActions: 'play none none none' } });
-    gsap.from(imageWrapRef.current.querySelector('.about-image-inner'), { opacity: 0, scale: 1.06, duration: 1.4, delay: 0.15, ease: 'power2.out', scrollTrigger: { trigger: imageWrapRef.current, start: 'top 80%', toggleActions: 'play none none none' } });
-    gsap.from(imageWrapRef.current.querySelector('.about-name-badge'), { opacity: 0, y: 12, duration: 0.7, delay: 0.6, ease: 'power2.out', scrollTrigger: { trigger: imageWrapRef.current, start: 'top 80%', toggleActions: 'play none none none' } });
-    // Image scroll parallax
-    gsap.to(imageWrapRef.current.querySelector('.about-image-inner'), { yPercent: -14, ease: 'none', scrollTrigger: { trigger: containerRef.current, start: 'top top', end: 'bottom bottom', scrub: true } });
-    // Breathing glows
-    gsap.to(imageWrapRef.current.querySelector('.about-glow-primary'), { scale: 1.15, opacity: 0.45, duration: 3, repeat: -1, yoyo: true, ease: 'sine.inOut' });
-    gsap.to(imageWrapRef.current.querySelector('.about-glow-secondary'), { scale: 1, opacity: 0.2, duration: 4, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 2 });
-    // Breathing orb in award card
-    gsap.to('.about-breathing-orb', { scale: 1.2, opacity: 0.14, duration: 2.5, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+    const titleReveals = gsap.utils.toArray('.js-title-reveal') as HTMLElement[];
+    titleReveals.forEach((el) => {
+      const delay = parseFloat(el.getAttribute('data-delay') || '0');
+      gsap.to(el, {
+        y: '0%', duration: 0.9, delay, ease: 'expo.out',
+        scrollTrigger: { trigger: el.parentElement, start: 'top 90%', toggleActions: 'play none none none' }
+      });
+    });
+
+    const accentLine = containerRef.current!.querySelector('.js-accent-line');
+    if (accentLine) {
+      gsap.to(accentLine, {
+        scaleX: 1, opacity: 1, duration: 1, delay: 0.4, ease: 'power2.out',
+        scrollTrigger: { trigger: accentLine, start: 'top 90%', toggleActions: 'play none none none' }
+      });
+    }
+
+    const cta = containerRef.current!.querySelector('.js-cta-reveal');
+    if (cta) {
+      gsap.to(cta, {
+        opacity: 1, y: 0, duration: 1, delay: 0.2, ease: 'power2.out',
+        scrollTrigger: { trigger: cta, start: 'top 90%', toggleActions: 'play none none none' }
+      });
+    }
+
+    // 2. Thermomechanical Orchestration via matchMedia
+    let mm = gsap.matchMedia(containerRef);
+
+    // Context: Desktop (>= 1024px)
+    mm.add('(min-width: 1024px)', () => {
+      // Setup elements hidden for mobile
+      gsap.set('.js-narrative-block', { autoAlpha: 1, y: 0, clearProps: 'transform' });
+
+      // Progress Trace & Scrubbing Narrative Blocks
+      const leftCol = containerRef.current!.querySelector('.js-left-col');
+      const blocks = leftCol?.querySelectorAll('.about-narrative-block');
+      const progressFill = leftCol?.querySelector('.about-progress-fill') as HTMLElement;
+      const progressDot = leftCol?.querySelector('.about-progress-dot') as HTMLElement;
+
+      if (leftCol && blocks && progressFill && progressDot) {
+        ScrollTrigger.create({
+          trigger: containerRef.current,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 2,
+          onUpdate: (self) => {
+            const p = self.progress;
+            progressFill.style.height = `${p * 100}%`;
+            progressDot.style.top = `${p * 100}%`;
+
+            blocks.forEach((el, i) => {
+              const rangeStart = i * 0.25;
+              const rangeEnd = (i + 1) * 0.25;
+              const fadeIn = Math.max(0, rangeStart - 0.08);
+              const fadeOut = Math.min(1, rangeEnd + 0.08);
+              let op = 0.12, sc = 0.98, tx = -6;
+
+              if (p >= rangeStart && p <= rangeEnd) { op = 1; sc = 1.02; tx = 0; }
+              else if (p >= fadeIn && p < rangeStart) {
+                const t = gsap.utils.mapRange(fadeIn, rangeStart, 0, 1, p);
+                op = gsap.utils.interpolate(0.12, 1, t); sc = gsap.utils.interpolate(0.98, 1.02, t); tx = gsap.utils.interpolate(-6, 0, t);
+              } else if (p > rangeEnd && p <= fadeOut) {
+                const t = gsap.utils.mapRange(rangeEnd, fadeOut, 0, 1, p);
+                op = gsap.utils.interpolate(1, 0.12, t); sc = gsap.utils.interpolate(1.02, 0.98, t); tx = gsap.utils.interpolate(0, -6, t);
+              }
+              (el as HTMLElement).style.opacity = String(op);
+              (el as HTMLElement).style.transform = `scale(${sc}) translateX(${tx}px)`;
+            });
+          }
+        });
+      }
+
+      // Image Parallax & Entrances
+      const imageWrap = containerRef.current!.querySelector('.js-image-wrap');
+      if (imageWrap) {
+        gsap.fromTo(imageWrap.querySelector('.about-image-outer'),
+          { opacity: 0, x: 40, scale: 0.96 },
+          { opacity: 1, x: 0, scale: 1, duration: 0.9, ease: 'power2.out', scrollTrigger: { trigger: imageWrap, start: 'top 80%', toggleActions: 'play none none none' } });
+
+        gsap.fromTo(imageWrap.querySelector('.about-image-inner'),
+          { opacity: 0, scale: 1.06 },
+          { opacity: 1, scale: 1, duration: 1.4, delay: 0.15, ease: 'power2.out', scrollTrigger: { trigger: imageWrap, start: 'top 80%', toggleActions: 'play none none none' } });
+
+        gsap.fromTo(imageWrap.querySelector('.about-name-badge'),
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: 0.7, delay: 0.6, ease: 'power2.out', scrollTrigger: { trigger: imageWrap, start: 'top 80%', toggleActions: 'play none none none' } });
+
+        // Parallax scroll
+        gsap.to(imageWrap.querySelector('.about-image-inner'), {
+          yPercent: -14,
+          ease: 'none',
+          scrollTrigger: { trigger: containerRef.current, start: 'top top', end: 'bottom bottom', scrub: true }
+        });
+
+        // Breathing Glows
+        const glowPrimary = imageWrap.querySelector('.about-glow-primary');
+        const glowSecondary = imageWrap.querySelector('.about-glow-secondary');
+        const orb = containerRef.current!.querySelector('.about-breathing-orb');
+        if (glowPrimary) gsap.to(glowPrimary, { scale: 1.15, opacity: 0.45, duration: 3, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+        if (glowSecondary) gsap.to(glowSecondary, { scale: 1, opacity: 0.2, duration: 4, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 2 });
+        if (orb) gsap.to(orb, { scale: 1.2, opacity: 0.14, duration: 2.5, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+
+        // Mouse 3D Tilt via quickTo
+        const tiltEl = imageWrap.querySelector('.about-tilt-target') as HTMLElement;
+        const outer = imageWrap.querySelector('.about-image-outer') as HTMLElement;
+        if (tiltEl && outer) {
+          const xTo = gsap.quickTo(tiltEl, 'rotateX', { duration: 0.4, ease: 'power2.out' });
+          const yTo = gsap.quickTo(tiltEl, 'rotateY', { duration: 0.4, ease: 'power2.out' });
+          const onMove = (e: MouseEvent) => {
+            const rect = outer.getBoundingClientRect();
+            const px = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+            const py = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+            yTo(px * 4); xTo(-py * 3);
+          };
+          const onLeave = () => { xTo(0); yTo(0); };
+          outer.addEventListener('mousemove', onMove, { passive: true });
+          outer.addEventListener('mouseleave', onLeave);
+
+          return () => {
+            outer.removeEventListener('mousemove', onMove);
+            outer.removeEventListener('mouseleave', onLeave);
+          };
+        }
+      }
+    });
+
+    // Context: Mobile/Tablet (< 1024px)
+    mm.add('(max-width: 1023px)', () => {
+      // Narrative blocks spatial reveal (Batch) via fromTo and autoAlpha
+      ScrollTrigger.batch('.js-narrative-block', {
+        onEnter: (elements) => gsap.fromTo(elements,
+          { autoAlpha: 0, y: 40 },
+          { autoAlpha: 1, y: 0, stagger: 0.15, duration: 1.2, ease: "power4.out", overwrite: true }
+        ),
+        start: 'top 90%',
+      });
+
+      // Simple Image Entrance Mobile
+      const imageWrap = containerRef.current!.querySelector('.js-image-wrap');
+      if (imageWrap) {
+        gsap.fromTo(imageWrap.querySelector('.about-image-outer'),
+          { autoAlpha: 0, y: 20 },
+          { autoAlpha: 1, y: 0, duration: 0.8, ease: 'power2.out', scrollTrigger: { trigger: imageWrap, start: 'top 85%', toggleActions: 'play none none none' } });
+
+        gsap.fromTo(imageWrap.querySelector('.about-image-inner'),
+          { autoAlpha: 0, scale: 1.05 },
+          { autoAlpha: 1, scale: 1, duration: 1, ease: 'power2.out', scrollTrigger: { trigger: imageWrap, start: 'top 85%', toggleActions: 'play none none none' } });
+
+        gsap.fromTo(imageWrap.querySelector('.about-name-badge'),
+          { autoAlpha: 0, y: 10 },
+          { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out', scrollTrigger: { trigger: imageWrap, start: 'top 85%', toggleActions: 'play none none none' } });
+      }
+
+      // Hide or static low-opacity glows to save GPU
+      gsap.set('.about-glow-primary, .about-glow-secondary, .about-breathing-orb', { opacity: 0.05, clearProps: 'animation' });
+      gsap.set('.about-tilt-target, .about-image-inner', { clearProps: 'transform' });
+    });
+
+    return () => mm.revert();
   }, { scope: containerRef });
-
-  // Mouse 3D tilt (desktop only via GSAP quickTo)
-  useEffect(() => {
-    if (!isDesktop || !imageWrapRef.current) return;
-    const tiltEl = imageWrapRef.current.querySelector('.about-tilt-target') as HTMLElement;
-    if (!tiltEl) return;
-    const xTo = gsap.quickTo(tiltEl, 'rotateX', { duration: 0.4, ease: 'power2.out' });
-    const yTo = gsap.quickTo(tiltEl, 'rotateY', { duration: 0.4, ease: 'power2.out' });
-    const outer = imageWrapRef.current.querySelector('.about-image-outer') as HTMLElement;
-    if (!outer) return;
-    const onMove = (e: MouseEvent) => {
-      const rect = outer.getBoundingClientRect();
-      const px = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-      const py = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
-      yTo(px * 4); xTo(-py * 3);
-    };
-    const onLeave = () => { xTo(0); yTo(0); };
-    outer.addEventListener('mousemove', onMove, { passive: true });
-    outer.addEventListener('mouseleave', onLeave);
-    return () => { outer.removeEventListener('mousemove', onMove); outer.removeEventListener('mouseleave', onLeave); };
-  }, [isDesktop]);
-
-  // Accent line reveal
-  const accentRef = useRef<HTMLDivElement>(null);
-  useGSAP(() => {
-    if (!accentRef.current) return;
-    gsap.from(accentRef.current, { scaleX: 0, opacity: 0, duration: 1, delay: 0.4, ease: 'power2.out', scrollTrigger: { trigger: accentRef.current, start: 'top 90%', toggleActions: 'play none none none' } });
-  }, { scope: accentRef });
-
-  // CTA reveal
-  const ctaRef = useRef<HTMLDivElement>(null);
-  useGSAP(() => {
-    if (!ctaRef.current) return;
-    gsap.from(ctaRef.current, { opacity: 0, y: 30, duration: 1, delay: 0.2, ease: 'power2.out', scrollTrigger: { trigger: ctaRef.current, start: 'top 90%', toggleActions: 'play none none none' } });
-  }, { scope: ctaRef });
 
   return (
     <section id="about" ref={containerRef} className="relative lg:min-h-[300vh]">
@@ -237,32 +301,31 @@ const AboutAmanda = () => {
       <div className="container mx-auto px-6 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 max-w-7xl mx-auto">
           {/* LEFT: Scrolling narrative */}
-          <div ref={leftColRef} className="order-2 lg:order-1 pt-24 lg:pt-32 pb-24 relative">
-            {isDesktop && (
-              <div className="absolute left-0 top-32 bottom-24 w-px">
-                <div className="absolute inset-0 bg-white/[0.05] rounded-full" />
-                <div className="about-progress-fill absolute top-0 left-0 w-full rounded-full" style={{ height: '0%', background: 'linear-gradient(to bottom, hsl(220 100% 55% / 0.5), hsl(220 100% 65% / 0.15))', boxShadow: '0 0 10px hsl(220 100% 55% / 0.2)' }} />
-                <div className="about-progress-dot absolute left-1/2 -translate-x-1/2 w-[7px] h-[7px] rounded-full" style={{ top: '0%', background: 'radial-gradient(circle, hsl(220 100% 70%) 30%, hsl(220 100% 55%) 100%)', boxShadow: '0 0 8px hsl(220 100% 60% / 0.6), 0 0 20px hsl(220 100% 55% / 0.25), 0 0 40px hsl(220 100% 55% / 0.1)' }} />
-              </div>
-            )}
+          <div className="js-left-col order-2 lg:order-1 pt-24 lg:pt-32 pb-24 relative">
+            <div className="hidden lg:block absolute left-0 top-32 bottom-24 w-px">
+              <div className="absolute inset-0 bg-white/[0.05] rounded-full" />
+              <div className="about-progress-fill absolute top-0 left-0 w-full rounded-full" style={{ height: '0%', background: 'linear-gradient(to bottom, hsl(220 100% 55% / 0.5), hsl(220 100% 65% / 0.15))', boxShadow: '0 0 10px hsl(220 100% 55% / 0.2)' }} />
+              <div className="about-progress-dot absolute left-1/2 -translate-x-1/2 w-[7px] h-[7px] rounded-full" style={{ top: '0%', background: 'radial-gradient(circle, hsl(220 100% 70%) 30%, hsl(220 100% 55%) 100%)', boxShadow: '0 0 8px hsl(220 100% 60% / 0.6), 0 0 20px hsl(220 100% 55% / 0.25), 0 0 40px hsl(220 100% 55% / 0.1)' }} />
+            </div>
+
             <div className="lg:pl-8">
               <TitleReveal className="mb-1"><h2 className={`font-luxury text-4xl md:text-5xl lg:text-6xl leading-[1.08] ${GRADIENT_TEXT}`}>Estrategia Global.</h2></TitleReveal>
               <TitleReveal delay={0.12} className="mb-5"><h2 className="font-luxury text-4xl md:text-5xl lg:text-6xl text-primary leading-[1.08]">Seguridad Patrimonial.</h2></TitleReveal>
-              <div ref={accentRef} className="w-16 h-px mb-14 origin-left" style={{ background: 'linear-gradient(to right, hsl(220 100% 55% / 0.6), transparent)' }} />
-              {SECTIONS.map((section, i) => (<NarrativeBlock key={section.id} section={section} index={i} isDesktop={isDesktop} />))}
-              <div ref={ctaRef} className="mt-12 md:mt-16 sm:ml-4 lg:ml-0 flex justify-center lg:justify-start lg:-ml-4"><MagneticCTA text="Diseñemos tu impacto" className="self-start" /></div>
+              <div className="js-accent-line w-16 h-px mb-14 origin-left opacity-0 scale-x-0" style={{ background: 'linear-gradient(to right, hsl(220 100% 55% / 0.6), transparent)' }} />
+              {SECTIONS.map((section, i) => (<NarrativeBlock key={section.id} section={section} index={i} />))}
+              <div className="js-cta-reveal opacity-0 translate-y-[30px] mt-12 md:mt-16 sm:ml-4 lg:ml-0 flex justify-center lg:justify-start lg:-ml-4"><MagneticCTA text="Diseñemos tu impacto" className="self-start" /></div>
             </div>
           </div>
 
           {/* RIGHT: Sticky image */}
-          <div ref={imageWrapRef} className="order-1 lg:order-2 lg:sticky lg:top-20 lg:self-start lg:h-fit pt-24 lg:pt-32">
-            <div className="about-image-outer relative rounded-2xl overflow-hidden" style={{ perspective: isDesktop ? 1200 : undefined }}>
-              <div className="about-tilt-target will-change-transform" style={{ transformStyle: isDesktop ? 'preserve-3d' : undefined }}>
+          <div className="js-image-wrap order-1 lg:order-2 lg:sticky lg:top-20 lg:self-start lg:h-fit pt-24 lg:pt-32">
+            <div className="about-image-outer relative rounded-2xl overflow-hidden lg:perspective-[1200px]">
+              <div className="about-tilt-target lg:transform-style-preserve-3d will-change-transform">
                 <div className="about-image-inner relative will-change-transform">
                   <img src="/lovable-uploads/5ce75e4d-ecd2-4490-8c38-8289c7e3a6e9.png" alt="Amanda Cruz, asesora financiera especializada en inversiones internacionales" className="w-full h-auto object-cover rounded-2xl" loading="lazy" style={{ maskImage: 'radial-gradient(ellipse 120% 90% at 50% 40%, black 50%, transparent 90%), linear-gradient(to bottom, black 55%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 120% 90% at 50% 40%, black 50%, transparent 90%), linear-gradient(to bottom, black 55%, transparent 100%)', maskComposite: 'intersect', WebkitMaskComposite: 'source-in' as unknown as string }} />
                 </div>
               </div>
-              {isDesktop && <div className="about-glow-primary absolute inset-0 -z-10 rounded-2xl" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 35%, hsl(220 100% 55% / 0.2), transparent 70%)', filter: 'blur(40px)', opacity: 0.25 }} />}
+              <div className="about-glow-primary hidden lg:block absolute inset-0 -z-10 rounded-2xl" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 35%, hsl(220 100% 55% / 0.2), transparent 70%)', filter: 'blur(40px)', opacity: 0.25 }} />
               <div className="about-glow-secondary absolute inset-0 -z-10 rounded-2xl" style={{ background: 'radial-gradient(ellipse 50% 50% at 60% 70%, hsl(200 80% 50% / 0.1), transparent 60%)', filter: 'blur(50px)', opacity: 0.1, transform: 'scale(1.1)' }} />
             </div>
             <div className="about-name-badge mt-6 text-center lg:text-left">

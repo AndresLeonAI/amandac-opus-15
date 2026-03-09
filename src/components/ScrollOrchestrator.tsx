@@ -25,7 +25,8 @@ const ScrollOrchestrator: React.FC<ScrollOrchestratorProps> = ({ children }) => 
             gestureOrientation: 'vertical',
             smoothWheel: !IS_TOUCH,
             wheelMultiplier: 1.0,
-            touchMultiplier: IS_TOUCH ? 1.5 : 2.0,
+            touchMultiplier: IS_TOUCH ? 1.0 : 2.0,
+            syncTouch: true,
             infinite: false,
             autoRaf: false,
         });
@@ -37,8 +38,26 @@ const ScrollOrchestrator: React.FC<ScrollOrchestratorProps> = ({ children }) => 
         gsap.ticker.add(update);
         gsap.ticker.lagSmoothing(0);
 
+        // Termomechanical Sync: Recalculate heights post render and resolution changes
+        let resizeTimer: NodeJS.Timeout;
+        const handleResize = () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                ScrollTrigger.refresh();
+            }, 250);
+        };
+
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleResize);
+
+        // Initial forced ping
+        setTimeout(() => ScrollTrigger.refresh(), 500);
+
         return () => {
             gsap.ticker.remove(update);
+            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('orientationchange', handleResize);
+            clearTimeout(resizeTimer);
             lenis.destroy();
         };
     }, []);
