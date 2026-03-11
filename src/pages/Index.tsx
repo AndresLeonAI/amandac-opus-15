@@ -7,6 +7,7 @@ import AboutAmanda from '@/components/AboutAmanda';
 import Services from '@/components/Services';
 import TrustBanner from '@/components/TrustBanner';
 import LuxuryDollarLoader from '@/components/LuxuryDollarLoader';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 // Below-fold: React.lazy for asymmetric hydration (TTI optimization)
 const KPIs = lazy(() => import('@/components/KPIs'));
@@ -29,7 +30,13 @@ const Skeleton = ({ mobileH, desktopH }: { mobileH: string; desktopH: string }) 
 
 const Index = () => {
   const [booting, setBooting] = useState(true);
+  const [hasMounted, setHasMounted] = useState(false);
   const loaderRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -84,10 +91,14 @@ const Index = () => {
 
   return (
     <>
-      {/* WebGL background — lazy loaded */}
-      <Suspense fallback={null}>
-        <WebGLShaderOceanLight className="pointer-events-none fixed inset-0 z-0" />
-      </Suspense>
+      <div className="mobile-ocean-backdrop pointer-events-none fixed inset-0 z-0" aria-hidden="true" />
+
+      {/* WebGL background — desktop only */}
+      {hasMounted && !isMobile ? (
+        <Suspense fallback={null}>
+          <WebGLShaderOceanLight className="pointer-events-none fixed inset-0 z-0" />
+        </Suspense>
+      ) : null}
 
       {/* Main content */}
       <div className="cursor-glow relative z-10">

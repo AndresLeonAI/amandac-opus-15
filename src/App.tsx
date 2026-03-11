@@ -23,7 +23,7 @@ const App = () => (
         <HashRouter>
           <ScrollOrchestrator>
             {/* Strict Global Bounds for X Leak Prevention & Noise Layer Attachment */}
-            <main className="relative w-full max-w-[100vw] overflow-x-clip bg-background">
+            <main className="relative w-full overflow-x-hidden bg-background">
               {/* Fixed Noise Overlay mapping to 100dvh to avoid GPU Context Loss */}
               <div
                 className="fixed inset-0 z-50 pointer-events-none mix-blend-overlay opacity-20"

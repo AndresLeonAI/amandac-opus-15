@@ -18,6 +18,7 @@
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import gsap from "gsap";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 /** Public props to integrate easily in Lovable */
 export interface WebGLShaderOceanLightProps {
@@ -47,6 +48,7 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
   className = "fixed top-0 left-0 w-full h-full block",
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isMobile = useIsMobile();
 
   /** Keep all Three.js refs bundled for easy cleanup */
   const sceneRef = useRef<{
@@ -75,6 +77,7 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
   });
 
   useEffect(() => {
+    if (isMobile) return;
     if (!canvasRef.current) return;
 
     const canvas = canvasRef.current;
@@ -267,7 +270,9 @@ const WebGLShaderOceanLight: React.FC<WebGLShaderOceanLightProps> = ({
         refs.renderer.domElement?.remove(); // Detach to prevent ghost contexts
       }
     };
-  }, [bottomColor, topColor, speed, distortion, xScale, yScale]);
+  }, [bottomColor, topColor, speed, distortion, xScale, yScale, isMobile]);
+
+  if (isMobile) return null;
 
   return <canvas ref={canvasRef} className={className} style={{ willChange: "transform" }} />;
 };

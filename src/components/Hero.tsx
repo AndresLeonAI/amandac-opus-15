@@ -1,25 +1,28 @@
-import React, { useRef, Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { useScrollToBooking } from '@/hooks/useScrollToBooking';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
-const SparklesCore = lazy(() => import('@/components/ui/sparkles').then(mod => ({ default: mod.SparklesCore })));
-
-const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+const SparklesCore = lazy(() => import('@/components/ui/sparkles').then((mod) => ({ default: mod.SparklesCore })));
 
 const Hero = () => {
   const heroRef = useRef<HTMLElement>(null);
   const scrollToBooking = useScrollToBooking();
+  const isMobile = useIsMobile();
+  const titleSize = 'clamp(2.9rem, 9vw, 5.75rem)';
+  const quoteSize = 'clamp(1.05rem, 3.4vw, 1.6rem)';
+  const subtitleSize = 'clamp(0.98rem, 2.7vw, 1.2rem)';
+  const ctaLabelSize = 'clamp(1rem, 2.8vw, 1.08rem)';
+  const ctaNoteSize = 'clamp(0.8rem, 2.2vw, 0.95rem)';
 
   useGSAP(() => {
-    if (!heroRef.current || IS_TOUCH) return;
+    if (!heroRef.current || isMobile) return;
 
-    // Create extremely fast, immutable GSAP tweeners pumping values directly to CSS Variables. 
-    // This entirely bypasses React's virtual DOM diffing (Zero Layout Thrashing).
-    const xTo = gsap.quickTo(heroRef.current, "--mouse-x", { duration: 0.6, ease: "power3.out" });
-    const yTo = gsap.quickTo(heroRef.current, "--mouse-y", { duration: 0.6, ease: "power3.out" });
+    const xTo = gsap.quickTo(heroRef.current, '--mouse-x', { duration: 0.6, ease: 'power3.out' });
+    const yTo = gsap.quickTo(heroRef.current, '--mouse-y', { duration: 0.6, ease: 'power3.out' });
 
     const handleMouseMove = (e: MouseEvent) => {
       const { clientX, clientY } = e;
@@ -28,88 +31,109 @@ const Hero = () => {
       yTo((clientY / innerHeight) * 100);
     };
 
-    // Passive listener so we don't block the Native Scroll Thread
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
-    // GSAP context automatically handles reverting on unmount!
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, { scope: heroRef });
+  }, { scope: heroRef, dependencies: [isMobile] });
 
   return (
     <section
       id="hero"
       ref={heroRef}
-      className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden bg-background"
+      className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-background"
       style={{
-        "--mouse-x": 50,
-        "--mouse-y": 50,
+        '--mouse-x': 50,
+        '--mouse-y': 50,
+        paddingBlockStart: 'max(env(safe-area-inset-top), clamp(1rem, 3vh, 2rem))',
+        paddingBlockEnd: 'max(env(safe-area-inset-bottom), clamp(1.25rem, 4vh, 2.75rem))',
         background: `
           radial-gradient(circle at calc(var(--mouse-x) * 1%) calc(var(--mouse-y) * 1%), hsl(220 100% 25% / 0.15) 0%, transparent 50%),
           linear-gradient(135deg, hsl(220 90% 8%) 0%, hsl(220 90% 12%) 100%)
-        `
+        `,
       } as React.CSSProperties}
     >
-      {/* Sparkles Effect - Full Screen Background */}
-      <div className="absolute inset-0 w-full h-full">
+      <div className="absolute inset-0 -z-10 h-full w-full overflow-hidden pointer-events-none">
         <Suspense fallback={null}>
-          <SparklesCore
-            id="hero-sparkles"
-            background="transparent"
-            minSize={1.0}
-            maxSize={2.8}
-            particleDensity={120}
-            className="w-full h-full"
-            particleColor="#60A5FA"
-          />
+          {!isMobile ? (
+            <SparklesCore
+              id="hero-sparkles"
+              background="transparent"
+              minSize={1.0}
+              maxSize={2.8}
+              particleDensity={120}
+              className="h-full w-full"
+              particleColor="#60A5FA"
+            />
+          ) : null}
         </Suspense>
       </div>
 
-      <div className="container mx-auto px-6 text-center relative z-10">
-        <div className="max-w-4xl mx-auto w-full">
-          {/* Main Title - Fluid scaling to prevent overflow */}
+      <div
+        className="container relative z-10 mx-auto flex w-full items-center justify-center px-5 text-center sm:px-6"
+        style={{ minHeight: 'calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom))' }}
+      >
+        <div className="mx-auto flex w-full max-w-[44rem] flex-col items-center justify-center gap-[clamp(1rem,2.75vh,1.75rem)]">
           <h1
-            className="font-luxury text-white mb-4 relative z-20 leading-[1.1] md:leading-tight"
-            style={{ fontSize: "clamp(3rem, 10vw, 6rem)" }}
+            className="relative z-20 mb-0 max-w-[12ch] text-balance font-luxury leading-[0.94] tracking-[-0.035em] text-white"
+            style={{ fontSize: titleSize }}
           >
             Estrategias financieras
-            <span className="block text-primary-glow mt-2 md:mt-0">Personalizadas</span>
+            <span className="mt-[clamp(0.15rem,1vh,0.5rem)] block text-primary-glow">Personalizadas</span>
           </h1>
 
-          {/* Personal Quote - Scaled down for mobile */}
-          <p className="font-luxury text-lg md:text-2xl text-primary/90 mb-6 md:mb-8 relative z-20 px-4 md:px-0">
+          <p
+            className="relative z-20 max-w-[30rem] px-3 font-luxury leading-[1.22] text-balance text-primary/90 sm:px-0"
+            style={{ fontSize: quoteSize }}
+          >
             "Tu tranquilidad financiera es mi principal objetivo."
           </p>
 
-          {/* Subtitle - Better mobile tracking and line-height */}
-          <p className="font-elegant text-base md:text-xl text-white/80 mb-10 md:mb-12 max-w-2xl mx-auto leading-relaxed relative z-20 px-2 md:px-0">
-            Asesoría personalizada para patrimonios selectos.<br className="hidden md:block" />
-            <span className="font-luxury text-primary/80 block mt-2 md:inline md:mt-0"> Discreción. Precisión. Resultados.</span>
+          <p
+            className="relative z-20 mx-auto max-w-[34rem] px-1 font-elegant leading-[1.55] text-pretty text-white/80 sm:px-0"
+            style={{ fontSize: subtitleSize }}
+          >
+            AsesorÃ­a personalizada para patrimonios selectos.<br className="hidden md:block" />
+            <span className="mt-2 block font-luxury text-primary/80 md:mt-0 md:inline"> DiscreciÃ³n. PrecisiÃ³n. Resultados.</span>
           </p>
 
-          {/* CTAs - Stack perfectly on mobile, row on desktop */}
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center relative z-20 w-full px-4 sm:px-0">
-            <div className="flex flex-col items-center w-full sm:w-auto">
+          <div className="relative z-20 flex w-full max-w-[36rem] flex-col items-center justify-center gap-[clamp(0.85rem,2.4vh,1.5rem)] px-1 sm:px-0">
+            <div className="flex w-full flex-col items-center">
               <Button
                 size="lg"
                 variant="premium"
-                className="group px-6 md:px-8 relative overflow-hidden w-full sm:w-auto h-14 md:h-12"
+                className="group relative w-full overflow-hidden rounded-full"
+                style={{
+                  minHeight: 'clamp(3.35rem, 10vw, 3.85rem)',
+                  paddingInline: 'clamp(1.15rem, 4vw, 2rem)',
+                  paddingBlock: 'clamp(0.95rem, 2.6vw, 1.1rem)',
+                  fontSize: ctaLabelSize,
+                }}
                 onClick={scrollToBooking}
               >
-                <span className="relative z-10 flex items-center justify-center gap-2 w-full">
+                <span className="relative z-10 flex w-full items-center justify-center gap-2">
                   Agendar consulta
-                  <ChevronDown className="w-4 h-4 transition-transform group-hover:translate-y-1" />
+                  <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-1" />
                 </span>
               </Button>
-              <p className="font-luxury text-xs opacity-80 md:text-sm text-white/70 mt-3 md:mt-2 text-center max-w-[250px] md:max-w-none">
+              <p
+                className="mt-3 max-w-[22rem] text-center font-luxury text-white/70 opacity-80"
+                style={{ fontSize: ctaNoteSize, lineHeight: 1.45 }}
+              >
                 Primera consulta de 30 minutos, sin costo y sin compromiso.
               </p>
             </div>
 
-            <div className="w-full sm:w-auto mt-4 sm:mt-0 pb-6 sm:pb-0">
+            <div className="w-full">
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full sm:w-auto px-6 md:px-8 py-6 h-14 md:h-auto text-base md:text-lg font-elegant tracking-wide hover:scale-102 transition-all duration-200"
+                className="w-full rounded-full font-elegant tracking-[0.02em] transition-transform duration-200 hover:scale-102"
+                style={{
+                  minHeight: 'clamp(3.25rem, 10vw, 3.8rem)',
+                  paddingInline: 'clamp(1.1rem, 4vw, 2rem)',
+                  paddingBlock: 'clamp(0.9rem, 2.4vw, 1.05rem)',
+                  fontSize: ctaLabelSize,
+                }}
                 onClick={() => {
                   const servicesSection = document.getElementById('asesoria-estrategia');
                   if (servicesSection) {
@@ -123,11 +147,10 @@ const Hero = () => {
               </Button>
             </div>
           </div>
-        </div>
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce relative z-20">
-          <ChevronDown className="w-6 h-6 text-white/40" />
+          <div className="hero-scroll-indicator relative z-20 flex items-center justify-center pt-[clamp(0.25rem,1.5vh,0.75rem)] text-white/40">
+            <ChevronDown className="h-6 w-6 animate-bounce" />
+          </div>
         </div>
       </div>
     </section>

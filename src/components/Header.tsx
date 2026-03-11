@@ -1,55 +1,60 @@
-import { useState, useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 import { useScrollToBooking } from '@/hooks/useScrollToBooking';
 
+gsap.registerPlugin(ScrollTrigger);
+
 const Header = () => {
-  const [hidden, setHidden] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
-  const prevScrollRef = useRef(0);
+  const bgRef = useRef<HTMLDivElement>(null);
   const scrollToBooking = useScrollToBooking();
 
-  // Replace useScroll/useMotionValueEvent with efficient passive scroll listener
-  useEffect(() => {
-    const onScroll = () => {
-      const latest = window.scrollY;
-      const previous = prevScrollRef.current;
+  useGSAP(() => {
+    if (!headerRef.current || !bgRef.current) return;
 
-      if (latest > previous && latest > 150) {
-        setHidden(true);
-      } else {
-        setHidden(false);
-      }
-      setScrolled(latest > 50);
-      prevScrollRef.current = latest;
-    };
+    ScrollTrigger.create({
+      start: 'top top',
+      end: '+=99999',
+      onUpdate: (self) => {
+        const scrollY = self.scroll();
+        const scrolled = scrollY > 50;
+        const hidden = self.direction === 1 && scrollY > 150;
 
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+        // O(1) Matrix Transformation via Layer Promotion
+        gsap.to(headerRef.current, {
+          yPercent: hidden ? -100 : 0,
+          duration: 0.3,
+          ease: 'power2.out',
+          overwrite: 'auto',
+        });
 
-  // GSAP-driven hide/show animation (replaces motion.header animate)
-  useEffect(() => {
-    if (!headerRef.current) return;
-    gsap.to(headerRef.current, {
-      y: hidden ? '-100%' : '0%',
-      duration: 0.35,
-      ease: 'power2.inOut',
+        // Estilos calculados en el hilo del Compositor CSS. Evita CSS transiciones peleando con GSAP.
+        gsap.to(bgRef.current, {
+          backgroundColor: scrolled ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0)',
+          backdropFilter: scrolled ? 'blur(24px)' : 'blur(0px)',
+          borderBottomColor: scrolled ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0)',
+          duration: 0.3,
+          ease: 'power2.out',
+          overwrite: 'auto',
+        });
+      },
     });
-  }, [hidden]);
+  }, { scope: headerRef });
 
   return (
     <header
       ref={headerRef}
-      className="fixed top-0 left-0 right-0 z-50 transition-colors duration-500"
+      className="fixed top-0 left-0 right-0 z-50 will-change-transform"
     >
-      {/* Glassmorphism Background Container */}
-      <div className={`absolute inset-0 transition-all duration-700 ${scrolled
-        ? 'bg-black/10 backdrop-blur-xl border-b border-white/5 shadow-sm supports-[backdrop-filter]:bg-black/5'
-        : 'bg-transparent border-transparent'
-        }`} />
+      {/* Background Container for GSAP animation */}
+      <div
+        ref={bgRef}
+        className="absolute inset-0 border-b border-transparent supports-[backdrop-filter]:bg-black/5"
+      />
 
       <div className="container mx-auto px-6 py-4 relative z-10">
         <div className="flex items-center justify-between">
