@@ -310,6 +310,23 @@ const Process = () => {
       const usableScroll = 0.75;
       const segLen = usableScroll / totalSteps;
 
+      // Pre-cache all sub-elements per panel — ZERO querySelector per frame
+      const panelEls = Array.from(panels) as HTMLElement[];
+      const textEls: (HTMLElement | null)[] = [];
+      const bgTextEls: (HTMLElement | null)[] = [];
+      const imageEls: (HTMLElement | null)[] = [];
+      const imgSharpEls: (HTMLElement | null)[] = [];
+      const imgBlurEls: (HTMLElement | null)[] = [];
+      const cardEls: (HTMLElement | null)[] = [];
+      panelEls.forEach(panel => {
+        textEls.push(panel.querySelector('.process-panel-text'));
+        bgTextEls.push(panel.querySelector('.process-panel-bgtext'));
+        imageEls.push(panel.querySelector('.process-panel-image'));
+        imgSharpEls.push(panel.querySelector('.process-panel-img-sharp'));
+        imgBlurEls.push(panel.querySelector('.process-panel-img-blur'));
+        cardEls.push(panel.querySelector('.process-panel-card'));
+      });
+
       // Create the master ScrollTrigger
       ScrollTrigger.create({
         trigger: stickyRef.current!.closest('[data-process-container]'),
@@ -333,9 +350,9 @@ const Process = () => {
             spineEmitter.style.opacity = String(spineOpacity);
           }
 
-          // Per-panel animations
-          panels.forEach((panel, index) => {
-            const el = panel as HTMLElement;
+          // Per-panel animations (using pre-cached refs — zero querySelector)
+          for (let index = 0; index < totalSteps; index++) {
+            const el = panelEls[index];
             const panelStart = heroOffset + (index * segLen);
             const panelEnd = panelStart + segLen;
             const isLast = index === totalSteps - 1;
@@ -347,7 +364,7 @@ const Process = () => {
             const isInRange = progress >= panelStart - 0.01 && progress <= absoluteExit + 0.01;
             el.style.display = isInRange ? 'block' : 'none';
 
-            if (!isInRange) return;
+            if (!isInRange) continue;
 
             // Opacity fade in/out
             let alpha = 0;
@@ -367,23 +384,23 @@ const Process = () => {
               gsap.utils.mapRange(panelStart, absoluteExit, 0, 1, progress)
             );
 
-            // Text
-            const textEl = el.querySelector('.process-panel-text') as HTMLElement;
+            // Text (cached)
+            const textEl = textEls[index];
             if (textEl) {
               textEl.style.opacity = String(gsap.utils.clamp(0, 1, alpha));
               textEl.style.transform = `translateZ(${tunnelZ}px)`;
             }
 
-            // Background text parallax
-            const bgText = el.querySelector('.process-panel-bgtext') as HTMLElement;
+            // Background text parallax (cached)
+            const bgText = bgTextEls[index];
             if (bgText) {
               const bgY = gsap.utils.mapRange(panelStart, panelEnd, 10, -40, progress);
               bgText.style.opacity = String(gsap.utils.clamp(0, 1, alpha));
               bgText.style.transform = `translateY(${bgY}%)`;
             }
 
-            // Image clip + scale
-            const imgContainer = el.querySelector('.process-panel-image') as HTMLElement;
+            // Image clip + scale (cached)
+            const imgContainer = imageEls[index];
             if (imgContainer) {
               const clipProgress = gsap.utils.clamp(0, 1, gsap.utils.mapRange(panelStart, enterEnd, 0, 1, progress));
               const insetTop = gsap.utils.interpolate(100, 0, clipProgress);
@@ -391,31 +408,30 @@ const Process = () => {
               imgContainer.style.transform = `translateZ(${tunnelZ}px)`;
             }
 
-            // Sharp image scale
-            const imgSharp = el.querySelector('.process-panel-img-sharp') as HTMLElement;
+            // Sharp image scale (cached)
+            const imgSharp = imgSharpEls[index];
             if (imgSharp) {
               const imgScale = gsap.utils.interpolate(1.4, 1, gsap.utils.clamp(0, 1, gsap.utils.mapRange(panelStart, enterEnd, 0, 1, progress)));
               imgSharp.style.transform = `scale(${imgScale})`;
-
               const sharpOp = gsap.utils.interpolate(1, 0.4, gsap.utils.clamp(0, 1, gsap.utils.mapRange(exitStart, absoluteExit, 0, 1, progress)));
               imgSharp.style.opacity = String(sharpOp);
             }
 
-            // Blur layer
-            const imgBlur = el.querySelector('.process-panel-img-blur') as HTMLElement;
+            // Blur layer (cached)
+            const imgBlur = imgBlurEls[index];
             if (imgBlur) {
               const blurOp = gsap.utils.clamp(0, 1, gsap.utils.mapRange(exitStart, absoluteExit, 0, 1, progress));
               imgBlur.style.opacity = String(blurOp);
             }
 
-            // Card UI drop
-            const card = el.querySelector('.process-panel-card') as HTMLElement;
+            // Card UI drop (cached)
+            const card = cardEls[index];
             if (card) {
               const cardY = gsap.utils.interpolate(0, 120, gsap.utils.clamp(0, 1, gsap.utils.mapRange(exitStart, absoluteExit, 0, 1, progress)));
               card.style.opacity = String(gsap.utils.clamp(0, 1, alpha));
               card.style.transform = `translateY(${cardY}px) translateZ(${tunnelZ}px)`;
             }
-          });
+          }
         },
       });
     }, containerRef);

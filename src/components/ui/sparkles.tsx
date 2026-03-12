@@ -98,8 +98,12 @@ export const SparklesCore: React.FC<SparklesCoreProps> = ({
     resizeCanvas();
 
     // Render function — subordinated to gsap.ticker
+    // Pre-compute fill style once (no per-frame string interpolation)
     const { r, g, b } = colorRef.current;
-    const render = () => {
+    const fillStyle = `rgb(${r}, ${g}, ${b})`;
+    let timeAccum = 0;
+
+    const render = (_: number, delta: number) => {
       if (!isVisibleRef.current || document.hidden) return; // Skip frame if not visible
 
       const ctx = canvas.getContext("2d");
@@ -109,26 +113,30 @@ export const SparklesCore: React.FC<SparklesCoreProps> = ({
       const displayH = canvas.height / dpr;
       ctx.clearRect(0, 0, displayW, displayH);
 
-      const time = Date.now() * 0.003;
+      // Monotonic accumulator from GSAP ticker delta (ms → seconds → scaled)
+      timeAccum += (delta * 0.001) * 3;
+      ctx.fillStyle = fillStyle;
 
-      particlesRef.current = particlesRef.current.map(particle => {
-        let newX = particle.x + particle.velocityX;
-        let newY = particle.y + particle.velocityY;
+      const particles = particlesRef.current;
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
 
-        if (newX < 0) newX = displayW;
-        if (newX > displayW) newX = 0;
-        if (newY < 0) newY = displayH;
-        if (newY > displayH) newY = 0;
+        // Mutate in-place — ZERO new objects created
+        p.x += p.velocityX;
+        p.y += p.velocityY;
 
-        const dynamicOpacity = Math.sin(time + particle.x * 0.01) * 0.4 + 0.8;
+        if (p.x < 0) p.x = displayW;
+        if (p.x > displayW) p.x = 0;
+        if (p.y < 0) p.y = displayH;
+        if (p.y > displayH) p.y = 0;
 
+        // Use globalAlpha instead of rgba string interpolation
+        ctx.globalAlpha = Math.sin(timeAccum + p.x * 0.01) * 0.4 + 0.8;
         ctx.beginPath();
-        ctx.arc(newX, newY, particle.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${dynamicOpacity})`;
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
-
-        return { ...particle, x: newX, y: newY, opacity: dynamicOpacity };
-      });
+      }
+      ctx.globalAlpha = 1; // Reset
     };
 
     gsap.ticker.add(render);

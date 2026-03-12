@@ -421,38 +421,50 @@ export const HeroParallax: React.FC<HeroParallaxProps> = ({ products }) => {
       }
 
       /* ── KINETIC STROKE TEXT SPATIAL MODIFIER (onUpdate) ── */
-      master.eventCallback("onUpdate", () => {
-        if (!hTrack) return;
-        const texts = hTrack.querySelectorAll(".text-kinetic");
-        const center = window.innerWidth / 2;
-
-        texts.forEach((text: any) => {
-          const rect = text.getBoundingClientRect();
-          const elementCenter = rect.left + rect.width / 2;
-          const dist = Math.abs(center - elementCenter);
-          const maxDist = window.innerWidth / 1.5;
-
-          let progress = 1 - (dist / maxDist);
-          if (progress < 0) progress = 0;
-          if (progress > 1) progress = 1;
-
-          // Curva de interpolación visual (expo)
-          const easeProgress = Math.pow(progress, 3);
-
-          // Mutaciones SVG (Proximidad altera el stroke y fill)
-          const strokeW = 1 + (easeProgress * 5); // Grosor de 1 a 6
-          const fillAlpha = easeProgress * 0.95;  // Core de relleno
-          const strokeAlpha = 0.2 + (progress * 0.8);
-
-          gsap.set(text, {
-            strokeWidth: strokeW,
-            fill: `rgba(255,255,255,${fillAlpha})`,
-            stroke: `rgba(255,255,255,${strokeAlpha})`,
-            scale: 1 + (easeProgress * 0.05), // Pulso volumétrico
-            transformOrigin: "center center"
-          });
+      /* Cached refs + computed positions — zero layout thrashing */
+      if (!IS_TOUCH) {
+        const kineticTexts = Array.from(hTrack.querySelectorAll(".text-kinetic")) as SVGTextElement[];
+        const kineticOffsets = kineticTexts.map(t => {
+          const svgParent = t.closest("svg");
+          const svgRect = svgParent ? svgParent.getBoundingClientRect() : { left: 0, width: 1 };
+          // Pre-compute the element's center offset relative to the hTrack's left edge
+          const bbox = t.getBBox();
+          const svgViewBox = svgParent?.viewBox?.baseVal;
+          const scaleX = svgRect.width / (svgViewBox?.width || 1);
+          return svgRect.left - (hTrack.getBoundingClientRect().left) + (bbox.x + bbox.width / 2) * scaleX;
         });
-      });
+        const viewCenter = window.innerWidth / 2;
+        const maxDist = window.innerWidth / 1.5;
+
+        // Pre-create setters for zero-allocation per-frame updates
+        const strokeWSetter = kineticTexts.map(t => gsap.quickSetter(t, "strokeWidth"));
+        const scaleSetter = kineticTexts.map(t => gsap.quickSetter(t, "scale"));
+
+        master.eventCallback("onUpdate", () => {
+          // Read hTrack's current x from GSAP's internal state (no layout forced)
+          const trackX = gsap.getProperty(hTrack, "x") as number;
+
+          for (let i = 0; i < kineticTexts.length; i++) {
+            const elementCenter = kineticOffsets[i] + trackX;
+            const dist = Math.abs(viewCenter - elementCenter);
+
+            let progress = 1 - (dist / maxDist);
+            if (progress < 0) progress = 0;
+            if (progress > 1) progress = 1;
+
+            const easeProgress = progress * progress * progress;
+            const strokeW = 1 + (easeProgress * 5);
+            const fillAlpha = easeProgress * 0.95;
+            const strokeAlpha = 0.2 + (progress * 0.8);
+
+            strokeWSetter[i](strokeW);
+            scaleSetter[i](1 + (easeProgress * 0.05));
+            const t = kineticTexts[i];
+            t.style.fill = `rgba(255,255,255,${fillAlpha})`;
+            t.style.stroke = `rgba(255,255,255,${strokeAlpha})`;
+          }
+        });
+      }
 
 
       /* ── ACT 6: EL VACÍO FINAL (0.95 - 1.00) ── */

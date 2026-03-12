@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react';
+import React, { useEffect, useRef, useCallback, useLayoutEffect } from 'react';
 import createGlobe from 'cobe';
 import { useScrollToBooking } from '@/hooks/useScrollToBooking';
 import gsap from 'gsap';
@@ -37,22 +37,23 @@ const CHAPTERS: ChapterData[] = [
   { index: 2, eyebrow: '03 — Protección', title: ['Protección', 'patrimonial'], body: 'Estructuras resilientes que preservan y multiplican, con blindaje ante cualquier volatilidad del mercado. 24 años diseñando escudos financieros.', accent: 'hsl(350 80% 65%)', accentRgb: '220,60,80', ghostNum: '03', stat: { value: 24, suffix: '+', label: 'Años protegiendo patrimonios' }, image: IMAGES[2] },
 ];
 
-/* ─── animated counter (GSAP) ─── */
+/* ─── animated counter (GSAP — zero re-renders via textContent mutation) ─── */
 const AnimCounter = ({ target, suffix = '', duration = 2.4 }: { target: number; suffix?: string; duration?: number }) => {
-  const ref = useRef<HTMLSpanElement>(null);
-  const [display, setDisplay] = useState(0);
+  const wrapRef = useRef<HTMLSpanElement>(null);
+  const numRef = useRef<HTMLSpanElement>(null);
   useGSAP(() => {
-    if (!ref.current) return;
+    if (!wrapRef.current || !numRef.current) return;
     const proxy = { val: 0 };
+    const numEl = numRef.current;
     gsap.to(proxy, {
       val: target, duration, ease: 'power2.out',
-      onUpdate: () => setDisplay(Math.round(proxy.val)),
-      scrollTrigger: { trigger: ref.current, start: 'top 90%', toggleActions: 'play none none none' },
+      onUpdate: () => { numEl.textContent = String(Math.round(proxy.val)); },
+      scrollTrigger: { trigger: wrapRef.current, start: 'top 90%', toggleActions: 'play none none none' },
     });
-  }, { scope: ref });
+  }, { scope: wrapRef });
   return (
-    <span ref={ref}>
-      <span className="font-serif italic text-5xl md:text-7xl bg-gradient-to-b from-white via-white/90 to-white/50 bg-clip-text text-transparent tabular-nums">{display}</span>
+    <span ref={wrapRef}>
+      <span ref={numRef} className="font-serif italic text-5xl md:text-7xl bg-gradient-to-b from-white via-white/90 to-white/50 bg-clip-text text-transparent tabular-nums">0</span>
       <span className="text-primary text-4xl md:text-6xl font-serif ml-1">{suffix}</span>
     </span>
   );
@@ -152,9 +153,9 @@ const GlobeCanvas = () => {
     let isVisible = true;
     const observer = new IntersectionObserver(([entry]) => { isVisible = entry.isIntersecting; }, { threshold: 0 });
     observer.observe(canvasRef.current);
-    const DPR = Math.min(window.devicePixelRatio || 1, 2); const CSS = 760;
+    const DPR = IS_TOUCH ? 1 : Math.min(window.devicePixelRatio || 1, 2); const CSS = IS_TOUCH ? 400 : 760;
     globeRef.current = createGlobe(canvasRef.current, {
-      devicePixelRatio: DPR, width: CSS * DPR, height: CSS * DPR, phi: 1.4, theta: 0.12, dark: 1, diffuse: 2.8, mapSamples: 24000, mapBrightness: 8.0,
+      devicePixelRatio: DPR, width: CSS * DPR, height: CSS * DPR, phi: 1.4, theta: 0.12, dark: 1, diffuse: 2.8, mapSamples: IS_TOUCH ? 8000 : 24000, mapBrightness: 8.0,
       baseColor: [0.05, 0.09, 0.25], markerColor: [1.0, 0.88, 0.1], glowColor: [0.05, 0.22, 1.0], offset: [0, 0],
       markers: [{ location: [4.711, -74.0721], size: 0.09 }, { location: [40.4168, -3.7038], size: 0.075 }, { location: [25.7617, -80.1918], size: 0.085 }, { location: [19.4326, -99.1332], size: 0.07 }, { location: [51.5074, -0.1278], size: 0.06 }, { location: [40.7128, -74.006], size: 0.07 }, { location: [1.3521, 103.8198], size: 0.055 }, { location: [48.8566, 2.3522], size: 0.055 }, { location: [-34.6037, -58.3816], size: 0.065 }, { location: [-23.5505, -46.6333], size: 0.058 }],
       onRender: (state) => { if (!isVisible) return; phiRef.current += 0.0014; state.phi = phiRef.current + mouseRef.current.dx; state.theta = 0.12 + mouseRef.current.dy; },
@@ -189,14 +190,76 @@ const CurrencyParticles = () => {
   return (<div ref={ref}>{PTCLS.map((p, i) => (<span key={i} className="gfc-ptcl pointer-events-none absolute font-serif select-none z-10" aria-hidden="true" style={{ top: p.t, left: p.l, fontSize: '1.5rem', color: 'rgba(255,255,255,0.06)' }}>{p.s}</span>))}</div>);
 };
 
+/* ─── ChapterPanel (subscribes to chapter ref, zero re-renders) ─── */
+const ChapterPanel = ({ chapter: ch, index: i, registerChapterListener }: { chapter: ChapterData; index: number; registerChapterListener: (fn: (c: number) => void) => () => void }) => {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const ghostRef = useRef<HTMLDivElement>(null);
+  const capRef = useRef<HTMLSpanElement>(null);
+  const iconWrapRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLParagraphElement>(null);
+  const dividerRef = useRef<HTMLDivElement>(null);
+  const Icon = ICONS[ch.index];
+  const isActiveRef = useRef(false);
+  const [isActive, setIsActive] = React.useState(false);
+
+  useEffect(() => {
+    return registerChapterListener((newChapter) => {
+      const active = newChapter === i;
+      if (active === isActiveRef.current) return;
+      isActiveRef.current = active;
+      // Direct DOM updates for non-React-controlled elements
+      if (ghostRef.current) ghostRef.current.style.opacity = active ? '0.04' : '0';
+      if (capRef.current) capRef.current.style.opacity = active ? '1' : '0';
+      if (iconWrapRef.current) {
+        iconWrapRef.current.style.transform = active ? 'scale(1)' : 'scale(0.82)';
+        iconWrapRef.current.style.opacity = active ? '1' : '0';
+      }
+      if (bodyRef.current) bodyRef.current.style.opacity = active ? '0.75' : '0.35';
+      if (dividerRef.current) {
+        dividerRef.current.style.transform = active ? 'scaleX(1)' : 'scaleX(0)';
+        dividerRef.current.style.opacity = active ? '0.35' : '0';
+      }
+      // Trigger state change for Icon/CharEyebrow/WordTitle (these need isActive prop for GSAP animations)
+      setIsActive(active);
+    });
+  }, [i, registerChapterListener]);
+
+  return (
+    <div ref={panelRef} className="gfc-chapter-panel absolute inset-y-0 left-0 w-full flex flex-col justify-center pl-6 md:pl-16 lg:pl-20 pr-6 pointer-events-none mt-10 md:mt-0" style={{ opacity: 0 }}>
+      <div ref={ghostRef} aria-hidden="true" className="absolute right-0 bottom-0 pointer-events-none select-none z-0 font-serif italic text-white transition-opacity duration-800" style={{ fontSize: '22vw', lineHeight: 0.85, opacity: 0 }}>{ch.ghostNum}</div>
+      <span ref={capRef} aria-hidden="true" className="absolute top-12 right-6 font-mono text-[7px] tracking-[0.3em] uppercase text-white/15 transition-opacity duration-600" style={{ opacity: 0 }}>CAP {ch.ghostNum} / 04</span>
+      <div ref={iconWrapRef} className="mb-5 transition-all duration-500" style={{ transform: 'scale(0.82)', opacity: 0 }}><Icon isActive={isActive} color={ch.accent} /></div>
+      <CharEyebrow text={ch.eyebrow} isActive={isActive} color={ch.accent} />
+      <WordTitle lines={ch.title} isActive={isActive} />
+      {ch.stat && (<div className="mb-5 transition-all duration-500" style={{ perspective: 600, transform: isActive ? 'rotateX(0) translateY(0) scale(1)' : 'rotateX(58deg) translateY(20px) scale(0.93)', opacity: isActive ? 1 : 0 }}><AnimCounter target={ch.stat.value} suffix={ch.stat.suffix} /><p className="mt-1 text-[10px] uppercase tracking-[0.3em] text-white/28 font-sans">{ch.stat.label}</p></div>)}
+      <p ref={bodyRef} className="font-sans font-light text-white leading-relaxed mb-4 md:mb-7 transition-opacity duration-500" style={{ fontSize: 'clamp(0.75rem, 1.1vw, 0.95rem)', maxWidth: '40ch', opacity: 0.35 }}>{ch.body}</p>
+      <div ref={dividerRef} style={{ height: '1px', background: ch.accent, width: '48px', transform: 'scaleX(0)', opacity: 0, transformOrigin: 'left', transition: 'all 0.8s cubic-bezier(0.25,0.46,0.45,0.94)' }} />
+    </div>
+  );
+};
+
 /* ═════════════════════════════════════════════════════
    MAIN COMPONENT — GSAP ScrollTrigger replaces ALL MotionValue chains
    ═════════════════════════════════════════════════════ */
 const GlobalFinancesCard = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
-  const [activeChapter, setActiveChapter] = useState(-1);
+  const activeChapterRef = useRef(-1);
+  const chapterListenersRef = useRef<Array<(chapter: number) => void>>([]);
   const scrollToBooking = useScrollToBooking();
+
+  // Subscribe to chapter changes (called by child components)
+  const registerChapterListener = useCallback((fn: (chapter: number) => void) => {
+    chapterListenersRef.current.push(fn);
+    return () => { chapterListenersRef.current = chapterListenersRef.current.filter(l => l !== fn); };
+  }, []);
+
+  // Dispatch chapter change without triggering React re-render
+  const setActiveChapterSafe = useCallback((newChapter: number) => {
+    if (newChapter === activeChapterRef.current) return;
+    activeChapterRef.current = newChapter;
+    chapterListenersRef.current.forEach(fn => fn(newChapter));
+  }, []);
 
   useLayoutEffect(() => {
     if (!sectionRef.current || !stickyRef.current) return;
@@ -270,7 +333,7 @@ const GlobalFinancesCard = () => {
             (el as HTMLElement).style.transform = `translateX(${panelX}px)`;
             if (panelOp > 0.28) newActive = i;
           });
-          if (newActive !== activeChapter) setActiveChapter(newActive);
+          setActiveChapterSafe(newActive);
           // Dots
           dots.forEach((el, i) => {
             const rng = C_RANGES[i]; if (!rng) return;
@@ -305,7 +368,8 @@ const GlobalFinancesCard = () => {
       });
     }, sectionRef);
     return () => ctx.revert();
-  }, [activeChapter]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <section id="finanzas-divisa" ref={sectionRef} className="relative" style={{ height: '550vh' }} aria-label="Finanzas globales — El Compás del Capital Global">
@@ -325,22 +389,9 @@ const GlobalFinancesCard = () => {
           <div className="gfc-globals-left relative h-[40%] md:h-full overflow-hidden shrink-0 mt-20 md:mt-0">
             <div className="gfc-header pointer-events-none absolute top-10 left-0 w-full flex items-center justify-between px-8 md:px-16 lg:px-20 z-40"><span className="font-sans text-[10px] tracking-[0.3em] uppercase text-white/20">El Compás del Capital Global</span><span className="font-sans text-[10px] tracking-[0.3em] uppercase text-white/20">Amanda Cruz · AXIA</span></div>
             <CurrencyParticles />
-            {CHAPTERS.map((ch, i) => {
-              const Icon = ICONS[ch.index];
-              const isActive = activeChapter === i;
-              return (
-                <div key={i} className="gfc-chapter-panel absolute inset-y-0 left-0 w-full flex flex-col justify-center pl-6 md:pl-16 lg:pl-20 pr-6 pointer-events-none mt-10 md:mt-0" style={{ opacity: 0 }}>
-                  <div aria-hidden="true" className="absolute right-0 bottom-0 pointer-events-none select-none z-0 font-serif italic text-white transition-opacity duration-800" style={{ fontSize: '22vw', lineHeight: 0.85, opacity: isActive ? 0.04 : 0 }}>{ch.ghostNum}</div>
-                  <span aria-hidden="true" className="absolute top-12 right-6 font-mono text-[7px] tracking-[0.3em] uppercase text-white/15 transition-opacity duration-600" style={{ opacity: isActive ? 1 : 0 }}>CAP {ch.ghostNum} / 04</span>
-                  <div className="mb-5 transition-all duration-500" style={{ transform: isActive ? 'scale(1)' : 'scale(0.82)', opacity: isActive ? 1 : 0 }}><Icon isActive={isActive} color={ch.accent} /></div>
-                  <CharEyebrow text={ch.eyebrow} isActive={isActive} color={ch.accent} />
-                  <WordTitle lines={ch.title} isActive={isActive} />
-                  {ch.stat && (<div className="mb-5 transition-all duration-500" style={{ perspective: 600, transform: isActive ? 'rotateX(0) translateY(0) scale(1)' : 'rotateX(58deg) translateY(20px) scale(0.93)', opacity: isActive ? 1 : 0 }}><AnimCounter target={ch.stat.value} suffix={ch.stat.suffix} /><p className="mt-1 text-[10px] uppercase tracking-[0.3em] text-white/28 font-sans">{ch.stat.label}</p></div>)}
-                  <p className="font-sans font-light text-white leading-relaxed mb-4 md:mb-7 transition-opacity duration-500" style={{ fontSize: 'clamp(0.75rem, 1.1vw, 0.95rem)', maxWidth: '40ch', opacity: isActive ? 0.75 : 0.35 }}>{ch.body}</p>
-                  <div style={{ height: '1px', background: ch.accent, width: '48px', transform: isActive ? 'scaleX(1)' : 'scaleX(0)', opacity: isActive ? 0.35 : 0, transformOrigin: 'left', transition: 'all 0.8s cubic-bezier(0.25,0.46,0.45,0.94)' }} />
-                </div>
-              );
-            })}
+            {CHAPTERS.map((ch, i) => (
+              <ChapterPanel key={i} chapter={ch} index={i} registerChapterListener={registerChapterListener} />
+            ))}
             <div className="gfc-scroll-hint pointer-events-none absolute bottom-10 left-[22.5%] -translate-x-1/2 z-40 flex flex-col items-center gap-2" aria-hidden="true"><span className="font-sans text-[9px] uppercase tracking-[0.4em] text-white/25">Scroll para explorar</span><svg className="w-4 h-4 text-white/20 gfc-scroll-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.1"><path d="M3 6l5 5 5-5" strokeLinecap="round" strokeLinejoin="round" /></svg></div>
           </div>
           {/* RIGHT */}

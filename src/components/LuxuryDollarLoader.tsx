@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 
 export type LuxuryDollarLoaderProps = {
@@ -8,18 +8,14 @@ export type LuxuryDollarLoaderProps = {
 export default function LuxuryDollarLoader({
   className,
 }: LuxuryDollarLoaderProps) {
-  const [loadingText, setLoadingText] = useState("INITIALIZING FIRMWARE");
-
-  // Refs for GSAP animation targeting
+  // Refs for direct DOM mutation (zero re-renders)
   const loaderRef = useRef<HTMLDivElement>(null);
-  const numberRef = useRef<HTMLSpanElement>(null);
+  const numberRef = useRef<HTMLDivElement>(null);
+  const loadingTextRef = useRef<HTMLSpanElement>(null);
   const progressLineRef = useRef<HTMLDivElement>(null);
   const svgLinesRef = useRef<(SVGPathElement | null)[]>([]);
   const svgCirclesRef = useRef<(SVGCircleElement | null)[]>([]);
-
-  // We use a regular React state for the number so React handles the rendering of the text,
-  // but GSAP drives the value mathematically to guarantee it stops at 100.
-  const [displayProgress, setDisplayProgress] = useState(0);
+  const lastTextRef = useRef("");
 
   useEffect(() => {
     // Master Timeline for absolute control, timed precisely to finish before Index.tsx unmounts at 5.0s
@@ -34,14 +30,20 @@ export default function LuxuryDollarLoader({
       ease: "power3.inOut", // Smooth acceleration and deceleration
       onUpdate: () => {
         const currentVal = Math.round(counterObj.val);
-        setDisplayProgress(currentVal);
+        // Direct DOM mutation — zero React re-renders
+        if (numberRef.current) numberRef.current.textContent = String(currentVal);
 
-        // Narrative text updates based on exact mathematical progress
-        if (currentVal < 20) setLoadingText("INITIALIZING FIRMWARE");
-        else if (currentVal < 45) setLoadingText("ANALYZING MARKETS");
-        else if (currentVal < 70) setLoadingText("PROJECTING GROWTH");
-        else if (currentVal < 95) setLoadingText("SECURING ASSETS");
-        else setLoadingText("ACCESS GRANTED");
+        // Narrative text updates via direct textContent mutation
+        let newText = "";
+        if (currentVal < 20) newText = "INITIALIZING FIRMWARE";
+        else if (currentVal < 45) newText = "ANALYZING MARKETS";
+        else if (currentVal < 70) newText = "PROJECTING GROWTH";
+        else if (currentVal < 95) newText = "SECURING ASSETS";
+        else newText = "ACCESS GRANTED";
+        if (newText !== lastTextRef.current) {
+          lastTextRef.current = newText;
+          if (loadingTextRef.current) loadingTextRef.current.textContent = newText;
+        }
       }
     }, 0);
 
@@ -181,8 +183,8 @@ export default function LuxuryDollarLoader({
         </div>
         <div className="text-right">
           <span className="block mb-1 opacity-50">STATUS</span>
-          <span className="block text-white/80 font-medium tracking-[0.3em] md:tracking-[0.5em] min-w-[120px]">
-            {loadingText}
+          <span ref={loadingTextRef} className="block text-white/80 font-medium tracking-[0.3em] md:tracking-[0.5em] min-w-[120px]">
+            INITIALIZING FIRMWARE
           </span>
         </div>
       </div>
@@ -190,7 +192,8 @@ export default function LuxuryDollarLoader({
       {/* CENTER: MASSIVE TYPOGRAPHY */}
       <div className="loader-typography-container relative z-10 flex flex-col items-center justify-center flex-grow w-full mix-blend-exclusion">
         <div className="relative flex items-center justify-center">
-          <div
+            <div
+            ref={numberRef}
             className="font-luxury italic leading-none tracking-tighter"
             style={{
               fontSize: "clamp(8rem, 28vw, 30rem)",
@@ -200,7 +203,7 @@ export default function LuxuryDollarLoader({
               textShadow: "0 0 30px rgba(255,255,255,0.05)"
             }}
           >
-            {displayProgress}
+            0
           </div>
           {/* Percentage Sign */}
           <span

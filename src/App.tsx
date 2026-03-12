@@ -14,6 +14,8 @@ import ScrollOrchestrator from "./components/ScrollOrchestrator";
 
 const queryClient = new QueryClient();
 
+const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
@@ -24,14 +26,16 @@ const App = () => (
           <ScrollOrchestrator>
             {/* Strict Global Bounds for X Leak Prevention & Noise Layer Attachment */}
             <main className="relative w-full overflow-x-hidden bg-background">
-              {/* Fixed Noise Overlay mapping to 100dvh to avoid GPU Context Loss */}
-              <div
-                className="fixed inset-0 z-50 pointer-events-none mix-blend-overlay opacity-20"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'repeat',
-                }}
-              />
+              {/* Fixed Noise Overlay — no blend mode (pre-mixed), eliminated on mobile */}
+              {!IS_TOUCH && (
+                <div
+                  className="fixed inset-0 z-50 pointer-events-none opacity-[0.04]"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'repeat',
+                  }}
+                />
+              )}
 
               <Routes>
                 <Route path="/" element={<Index />} />
